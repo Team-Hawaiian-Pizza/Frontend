@@ -1,0 +1,160 @@
+:root{
+  --mp-border: #e5e7eb;
+  --mp-text: #111827;
+  --mp-muted: #6b7280;
+  --mp-bg: #ffffff;
+  --mp-soft: #f9fafb;
+  --mp-primary: #111827; /* 버튼 테두리/텍스트 */
+  --mp-accent: #ef4444;  /* 온도계 색 */
+}
+
+.mp-main{
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 60px;
+  background: var(--mp-soft);
+}
+.mp-card{
+  width: 100%;
+  max-width: 960px;
+  background: var(--mp-bg);
+  border: 1px solid var(--mp-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 24px;
+}
+
+/* 상단 프로필 */
+.mp-profile{
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  gap: 20px;
+  align-items: start;
+  border-bottom: 1px solid var(--mp-border);
+  padding-bottom: 20px;
+}
+
+.mp-avatar{
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 1px solid var(--mp-border);
+  overflow: hidden;
+  display: grid; place-items: center;
+}
+.mp-avatar img{
+  width: 100%; height: 100%; object-fit: cover; display:block;
+}
+.mp-avatar-placeholder{
+  width: 60%; height: 60%;
+  border-radius: 50%;
+  background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6);
+}
+
+.mp-profile-meta{ display: flex; flex-direction: column; gap: 12px; }
+.mp-name-row{
+  display: flex; align-items: center; gap: 10px;
+}
+.mp-name{
+  margin: 0;
+  font-size: 20px;
+  color: var(--mp-text);
+}
+
+/* 버튼들 */
+.mp-btn{
+  height: 34px;
+  padding: 0 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--mp-border);
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+}
+.mp-btn:hover{ box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.mp-btn:active{ transform: translateY(0.5px); }
+
+.mp-btn-primary{
+  border-color: var(--mp-primary);
+  color: var(--mp-primary);
+  background: #fff;
+}
+.mp-btn-ghost{
+  background: #f9fafb;
+}
+.mp-btn-light{
+  background: #fff;
+}
+
+/* 매너온도 */
+.mp-thermo-wrap{ display: flex; flex-direction: column; gap: 8px; }
+.mp-thermo-label{
+  font-size: 14px; color: var(--mp-text);
+}
+.mp-thermo{
+  height: 14px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+.mp-thermo-fill{
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #f87171, var(--mp-accent));
+  border-right: 1px solid rgba(0,0,0,0.06);
+  transition: width .3s ease;
+}
+.mp-thermo-scale{
+  display: flex; justify-content: space-between;
+  color: var(--mp-muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* 도장판 */
+.mp-stamps{ padding-top: 20px; }
+.mp-sec-header{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.mp-sec-title{
+  margin: 0; font-size: 16px; font-weight: 700; color: var(--mp-text);
+}
+
+.mp-stamp-grid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.mp-stamp-card{
+  background: #fff;
+  border: 1px solid var(--mp-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  align-items: stretch;
+}
+.mp-stamp-thumb{
+  height: 96px;
+  background: linear-gradient(135deg,#f3f4f6,#e5e7eb);
+  border-radius: 10px;
+  border: 1px dashed #d1d5db;
+}
+.mp-stamp-title{
+  font-size: 14px;
+  color: var(--mp-text);
+}
+
+/* 반응형 */
+@media (max-width: 860px){
+  .mp-stamp-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 520px){
+  .mp-profile{ grid-template-columns: 1fr; }
+  .mp-avatar{ width: 72px; height: 72px; }
+  .mp-name-row{ flex-wrap: wrap; }
+  .mp-stamp-grid{ grid-template-columns: 1fr; }
+}
