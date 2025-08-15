@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import api from "../../api/axios";         // alias 없으면 이 경로 사용
 import "../../styles/Signup.css";
 
 export default function SignUpPage() {
@@ -10,7 +9,6 @@ export default function SignUpPage() {
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validate = () => {
@@ -22,20 +20,19 @@ export default function SignUpPage() {
     return "";
   };
 
-  const onSubmit = async (e) => {
+  const goLocation = (e) => {
     e.preventDefault();
     const v = validate();
     if (v) { setErr(v); return; }
-    setErr(""); setLoading(true);
-    try {
-      await api.post("/auth/signup", { id, password: pw });
-      navigate("/login");
-    } catch (e) {
-      const msg = e?.response?.data?.message || "회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.";
-      setErr(msg);
-    } finally {
-      setLoading(false);
-    }
+    setErr("");
+
+    // 다음 단계에서 사용할 임시 저장
+    localStorage.setItem("signup_id", id);
+    localStorage.setItem("signup_pw", pw);
+    localStorage.removeItem("region_sido");
+    localStorage.removeItem("region_sigungu");
+
+    navigate("/location");
   };
 
   const Eye = () => (
@@ -48,7 +45,7 @@ export default function SignUpPage() {
     <section className="signup">
       <div className="signup__hero">건너건너</div>
 
-      <form className="signup__form" onSubmit={onSubmit}>
+      <form className="signup__form" onSubmit={goLocation}>
         <label className="signup__label">ID</label>
         <input
           className="signup__input"
@@ -100,8 +97,8 @@ export default function SignUpPage() {
 
         {err && <div className="signup__error">{err}</div>}
 
-        <button className="signup__submit" disabled={loading}>
-          {loading ? "가입 중…" : "Sign Up"}
+        <button className="signup__submit" type="submit">
+          장소 설정하러 가기
         </button>
 
         <div className="signup__login">
@@ -111,3 +108,4 @@ export default function SignUpPage() {
     </section>
   );
 }
+
