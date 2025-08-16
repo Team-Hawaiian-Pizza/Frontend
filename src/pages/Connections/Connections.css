@@ -1,0 +1,129 @@
+/* 페이지 레이아웃 */
+.connections-page {
+    max-width: 1200px;
+    margin: 24px auto 80px;
+    padding: 0 20px;
+}
+
+.connections-container {
+    display: flex;
+    gap: 24px;
+    background: #f5f5f7;
+    border: 1px solid #e7e7e7;
+    border-radius: 20px;
+    padding: 24px;
+    min-height: 500px;
+}
+
+/* ── 공통 스타일 ───────────────────────────────────────── */
+.connections-left,
+.connections-right {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+}
+
+.connections-section {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 16px;
+}
+
+.connections-section h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 12px;
+}
+
+/* ── 왼쪽 섹션 ────────────────────────────────────────── */
+.add-friend-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.code-input {
+    flex: 1;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    font-size: 16px;
+    color: #666;
+    text-align: center;
+}
+
+.add-button,
+.copy-button {
+    height: 48px;
+    padding: 0 20px;
+    border: 1px solid #d0d0d0;
+    border-radius: 12px;
+    background: #d9d9d9;
+    color: #111;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.my-code-section h3 {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.my-code-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.my-code {
+    font-size: 32px;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 20px;
+}
+
+/* ── 오른쪽 섹션 ───────────────────────────────────────── */
+.request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.request-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 12px;
+}
+
+.avatar-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #d9d9d9;
+    border: 1px solid #ececec;
+}
+
+.request-info {
+    flex: 1;
+}
+
+.request-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.request-introducer {
+    font-size: 12px;
+    color: #888;
+}

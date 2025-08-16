@@ -1,0 +1,147 @@
+/* 페이지 레이아웃 */
+.chatting-page {
+    max-width: 1200px;
+    margin: 24px auto 80px;
+    padding: 0 20px;
+}
+
+.chat-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    background: #f5f5f7;
+    border: 1px solid #e7e7e7;
+    border-radius: 20px;
+    padding: 24px;
+    min-height: 700px;
+}
+
+/* ── 왼쪽: 채팅 목록 ────────────────────────────────────────── */
+.chat-list-section {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #ececec;
+}
+
+.chat-header {
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 1px solid #ececec;
+}
+
+.chat-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.chat-item.selected {
+    background: #e6f2ff;
+}
+
+.chat-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #d9d9d9;
+    border: 1px solid #ececec;
+}
+
+.chat-info {
+    flex: 1;
+}
+
+.chat-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.chat-date {
+    font-size: 12px;
+    color: #888;
+}
+
+/* ── 오른쪽: 채팅 내용 ────────────────────────────────────────── */
+.chat-content-section {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #ececec;
+}
+
+.chat-content-header {
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 1px solid #ececec;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.message {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.my-message {
+    justify-content: flex-end;
+}
+
+.chat-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #d9d9d9;
+    border: 1px solid #ececec;
+}
+
+.message-bubble {
+    max-width: 60%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.4;
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.message:not(.my-message) .message-bubble {
+    background: #f0f0f0;
+}
+
+.my-message .message-bubble {
+    background: #e6f2ff;
+    color: #111;
+}
+
+.chat-input-area {
+    padding: 16px;
+    border-top: 1px solid #ececec;
+}
+
+.chat-input-area input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 14px;
+}

@@ -1,0 +1,190 @@
+/* 기본 */
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+/* 페이지 컨테이너 */
+.searchpage {
+  max-width: 1200px;
+  margin: 24px auto 80px;
+  padding: 0 20px;
+}
+
+/* ── 검색바 ───────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 24px;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 760px;
+  height: 56px;
+  padding: 0 18px;
+  border: 1px solid #e6e6e6;
+  border-radius: 16px;
+  background: #f7f7f7;
+  font-size: 16px;
+}
+
+.search-btn {
+  height: 56px;
+  padding: 0 22px;
+  border: 1px solid #d0d0d0;
+  border-radius: 16px;
+  background: #d9d9d9;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── 리스트 박스 (회색 박스) ─────────────────────────── */
+.list {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr; /* 친구(짧게)와 건너건너(길게)의 비율 조정 */
+  gap: 20px 24px;
+  background: #f5f5f7;
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+/* 상단 라벨(알약 모양) */
+.friend-card-header,
+.fof-card-header {
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #d9d9d9;
+  color: #333;
+  font-weight: 800;
+  padding: 0 24px;
+  white-space: nowrap;
+}
+
+.friend-card-header { grid-column: 1; }
+.fof-card-header { grid-column: 2; }
+
+/* 친구와 건너건너 카드를 나란히 배치 */
+.friend-list-item {
+  grid-column: 1;
+  display: grid;
+  place-items: center;
+  align-self: start;
+}
+.fof-list-item {
+  grid-column: 2;
+  display: grid;
+  gap: 14px;
+}
+
+/* ── 친구 카드 스타일 ────────────────────────────────── */
+.friend-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  height: 200px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  width: 100%;
+}
+.friend-card .card-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+.friend-card .card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.friend-card .card-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111;
+}
+
+/* ── 친구의 친구 카드 스타일 ─────────────────────────── */
+.fof-card {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  cursor: pointer;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.fof-card .card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.fof-card .card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fof-card .card-info {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+.fof-card .card-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111;
+}
+.fof-card .card-info-detail,
+.fof-card .card-info-blurred {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fof-card .card-info-detail span {
+  font-size: 14px;
+  color: #555;
+}
+.fof-card .card-placeholder {
+  filter: blur(4px);
+  user-select: none;
+  color: #666;
+}
+.fof-card .card-guide {
+  display: inline-block;
+  font-size: 12px;
+  color: #555;
+  background: #eee;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 6px 10px;
+  width: fit-content;
+}
+
+.fof-card .card-actions {
+  text-align: right;
+}
+.fof-card .card-button {
+  border: 1px solid #d0d0d0;
+  background: #d9d9d9;
+  color: #111;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
