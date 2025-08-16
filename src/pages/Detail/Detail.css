@@ -1,0 +1,143 @@
+.detail-page {
+  max-width: 1200px;
+  margin: 24px auto 80px;
+  padding: 0 20px;
+}
+
+.detail-container {
+  display: flex;
+  gap: 40px;
+  background: #f5f5f7;
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  padding: 40px;
+}
+
+/* ── 왼쪽 섹션 (명함) ─────────────────────────────────── */
+.detail-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 300px;
+}
+
+.detail-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #ececec;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.detail-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  margin-bottom: 20px;
+}
+.detail-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 16px;
+  color: #555;
+}
+.detail-info.blurred span {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.detail-buttons {
+  display: grid;
+  gap: 12px;
+}
+.detail-button {
+  width: 100%;
+  padding: 16px;
+  background: #d9d9d9;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* ── 오른쪽 섹션 (상세 정보) ──────────────────────────── */
+.detail-right {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-section {
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #ececec;
+}
+.detail-section h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.detail-section p {
+  font-size: 16px;
+  color: #555;
+  margin: 0;
+}
+
+.detail-tags span {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  background: #eee;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-right: 8px;
+}
+
+.detail-manner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.manner-bar-container {
+  flex: 1;
+  height: 10px;
+  background: #e5e5e5;
+  border-radius: 5px;
+}
+.manner-bar {
+  height: 100%;
+  background: #ff5722;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+.detail-manner span {
+  font-weight: bold;
+}
