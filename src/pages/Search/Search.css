@@ -127,8 +127,8 @@ body { margin: 0; }
   gap: 14px;
 }
 .fof-card .card-avatar {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 1px solid #e5e5e5;
   overflow: hidden;
