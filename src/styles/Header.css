@@ -9,15 +9,16 @@ body{
 
 .wrap {
   padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
+  display: flex; /*내부 요소를 한줄로 배치함*/
+  justify-content: space-between; /*요소들을 양끝에 배치*/
   align-items: center;
 }
 
+/*로고*/
 .logo {
   font-size: 30px;
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: none; /*밑줄 제거*/
   color: #555;
 }
 
@@ -26,6 +27,7 @@ body{
   gap: 15px;
 }
 
+/*개별 네이게이션 링크*/
 .item {
   text-decoration: none;
   color: #555;
@@ -36,12 +38,13 @@ body{
   color: #000;
 }
 
+/*로그아웃 버튼*/
 .logout {
-  background: transparent;
+  background: transparent; /*배경색 투명*/
   border: none;
   cursor: pointer;
   font-weight: 500;
-  font-family: inherit;
+  font-family: inherit; /*폰트 : 부모 요소에 상속되게 함*/
   color: #555;
   font-size: 16px
 }

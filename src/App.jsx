@@ -35,7 +35,6 @@ function App() {
     <Router>
       <Routes>
         {/*헤더 없음*/}
-        <Route path="/" element={<Mainpage onLogin={handleLogin} />} />
         <Route path="/entry" element={<Entry />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -53,7 +52,7 @@ function App() {
           <Route path="/card/edit" element={<ModifyCard />} />
           <Route path="/stamp/:id" element={<StampBoard />} />
           <Route path="/coupon" element={<Coupon />} />
-          <Route path="/Mainpage" element={<Mainpage/>} />
+          <Route path="/" element={<Mainpage onLogin={handleLogin} />} />
         </Route>
       </Routes>
     </Router>
