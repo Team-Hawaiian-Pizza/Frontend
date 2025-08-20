@@ -13,13 +13,13 @@ const Header = ({isLogIn, onLogout}) => {
                 <NavLink to="/search" className="item">Search</NavLink>
                 <NavLink to="/chat" className="item">Chatting</NavLink>
                 <NavLink to="/connect" className="item">Connection</NavLink>
-                <button onClick={onLogout} className='logout'>Logout</button>
                 
               {/* isLogin이 ture일 경우 -> 로그아웃 버튼*/}
               {isLogIn ? (
                   <button onClick={onLogout} className='logout'>Logout</button>
               ) : (
-                  <NavLink to="/login" className='item'>Login / Signup</NavLink>
+                  <NavLink to="/login" className='item' 
+                    onClick={ () => console.log("로그인 버튼이 클릭됨")}>Login / Signup</NavLink>
               )}
             </nav>  
         </div>

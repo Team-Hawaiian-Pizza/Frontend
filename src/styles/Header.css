@@ -1,50 +1,106 @@
-body{
-    margin: 0px;
-    padding: 0px;
-}
-
+/* 헤더 전체 */
 .header {
-  background-color: #f5f5f5;
+  position: sticky; /*스크롤 시 상단 고정*/
+  top: 0;
+  z-index: 50; /*다른 요소들 보다 위에 표시되도록 우선 순위를 높임*/
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.08), 0 1px 0 rgba(17, 24, 39, 0.05);
 }
 
+/* 내부 정렬 */
 .wrap {
-  padding: 10px 20px;
-  display: flex; /*내부 요소를 한줄로 배치함*/
-  justify-content: space-between; /*요소들을 양끝에 배치*/
-  align-items: center;
-}
-
-/*로고*/
-.logo {
-  font-size: 30px;
-  font-weight: 600;
-  text-decoration: none; /*밑줄 제거*/
-  color: #555;
-}
-
-.header-nav {
+  padding: 26px 34px;
   display: flex;
-  gap: 15px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/*개별 네이게이션 링크*/
-.item {
+/* 로고 */
+.logo {
+  text-decoration: none; /*밑줄 제거*/
+  font-size: 40px;
+  font-weight: 800;
+  color: #1D4ED8
+}
+
+/* 네비게이션 */
+.header-nav {
+  display: flex; /*아이템들 가로로 배치*/
+  align-items: center;
+  gap: 18px;
+}
+
+/* 링크 */
+.header-nav .item {
+  position: relative; /*after 위치 기준*/
   text-decoration: none;
-  color: #555;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 20px;
+  color: #1D4ED8;
+  padding: 8px 6px;
+  transition: color 100ms ease-out; /*색상 변화를 부드럽게 함*/
 }
 
-.item:hover {
-  color: #000;
+/* 밑줄 효과 -> 기본은 숨겨져 있음 */
+.header-nav .item::after {
+  content: '';
+  position: absolute; /*부모를 기준으로 절대위치*/
+  left: 8px;
+  right: 8px;
+  bottom: 2px;
+  height: 3px; /*밑줄 두께*/
+  border-radius: 5px;
+  background: #3B82F6;
+  transform: scaleX(0); /*가로 사이즈가 0, 숨겨진 상태임*/
+  transform-origin: center; /*중앙을 기준으로 커짐*/
+  transition: transform 200ms ease-in-out; /*확장되는 애니메이션*/
 }
 
-/*로그아웃 버튼*/
+/* hover */
+.header-nav .item:hover {
+  color: #3B82F6;
+}
+.header-nav .item:hover::after {
+  transform: scaleX(1); /*밑줄이 가로로 100% 확장 되는 혀과*/
+}
+
+/* 현재 페이지 표시*/
+.header-nav .item.active {
+  color: #3B82F6;
+}
+.header-nav .item.active::after {
+  transform: scaleX(1);
+}
+
+/* 로그아웃 버튼 -> 로그아웃은 텍스트가 아니므로! */
 .logout {
-  background: transparent; /*배경색 투명*/
+  background: transparent;
   border: none;
   cursor: pointer;
-  font-weight: 500;
-  font-family: inherit; /*폰트 : 부모 요소에 상속되게 함*/
-  color: #555;
-  font-size: 16px
+  font-weight: 600;
+  font-family: inherit;
+  color: #1D4ED8;
+  font-size: 20px;
+  padding: 8px 6px;
+  position: relative;
+  transition: color 100ms ease-out;
+}
+.logout:hover {
+  color: #3B82F6;
+}
+.logout::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 2px;
+  height: 3px;
+  border-radius: 3px;
+  background: #3B82F6;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 200ms ease-in-out;
+}
+.logout:hover::after {
+  transform: scaleX(1);
 }
