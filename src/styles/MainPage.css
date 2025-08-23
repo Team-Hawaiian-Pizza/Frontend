@@ -1,7 +1,11 @@
-/* MainPage.css */
+/* ===== 상단 기존 UI ===== */
+.main-page { background: var(--mp-soft, #f7f8fa); color: var(--mp-text, #0f172a); }
+
 .main-container {
   text-align: center;
-  padding: 20px;
+  padding: 20px 16px 28px;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 /* 검색바 */
@@ -17,15 +21,15 @@
   height: 44px;
   padding: 0 14px;
   border-radius: 18px;
-  border: none;
-  background-color: #f0f0f0;
+  border: 1px solid #e5e7eb;
+  background-color: #f3f4f6;
   font-size: 14px;
 }
 .search-btn {
   height: 44px;
   padding: 0 14px;
-  border: none;
-  background-color: #f0f0f0;
+  border: 1px solid #e5e7eb;
+  background-color: #f3f4f6;
   border-radius: 12px;
   cursor: pointer;
   display: inline-flex;
@@ -38,9 +42,9 @@
   display: inline-flex;
   align-items: center;
   border-radius: 18px;
-  background: #f0f0f0;
-  font-size: 14px;
-  color: #333;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  font-size: 14px; color: #333;
   white-space: nowrap;
 }
 
@@ -55,7 +59,7 @@
   margin: 0 auto;
   border: none;
 
-  /* 내부를 2열 그리드로 */
+  /* 내부 2열 그리드 */
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px; /* 좌: 그래프, 우: 추천 */
   gap: 16px;
@@ -95,10 +99,128 @@
   .graph-container {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: 640px; /* 모바일에서 너무 작지 않게 */
+    min-height: 640px;
   }
 }
 
+/* ===== 아래 랜딩 섹션 ===== */
+.landing {
+  padding: 28px 16px 80px;
+}
 
+/* 공통 제목/문단 */
+.l-title { margin: 0 0 6px; font-size: clamp(22px, 3.2vw, 32px); }
+.l-sub   { color: var(--mp-muted, #6b7280); margin: 0 0 18px; }
 
+/* 섹션 래퍼 */
+.l-sec {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 36px 0;
+}
 
+/* 소개 중앙 정렬 */
+.l-intro { text-align: center; }
+
+/* 기능 카드 */
+.l-grid-3 {
+  display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px;
+}
+.l-card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.l-card .l-emoji { font-size: 24px; margin-bottom: 8px; }
+.l-card h3 { margin: 0 0 6px; }
+
+/* Steps */
+.l-steps { display: grid; gap: 14px; }
+.l-step {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 16px 18px;
+}
+.l-badge{ display:inline-block; font-size:12px; color:#4f46e5; background:#eef2ff; border:1px solid #dbeafe; border-radius:999px; padding:2px 8px; margin-bottom:6px; }
+
+/* Showcase */
+.l-showbox{
+  display: grid; gap: 24px; align-items: center;
+  grid-template-columns: 1fr 1fr;
+}
+.l-dots{
+  display:grid; grid-template-columns: repeat(5, 48px); gap: 10px; padding: 18px;
+  border:1px dashed #e5e7eb; border-radius: 16px; background: #fff;
+}
+.l-dot{ width: 48px; height: 48px; border-radius: 999px; background: #e5e7eb; }
+.l-dot.on{ background: #3b82f6; box-shadow: inset 0 0 0 6px #bfdbfe; border:1px solid #3b82f6; }
+
+.l-copy h3{ margin: 0 0 6px; }
+.l-cta{ display:flex; gap:10px; margin-top:10px; }
+
+/* 버튼 스타일 재사용 */
+.lp-btn{
+  height: 40px; padding: 0 16px; border-radius: 12px; font-weight: 800; cursor: pointer; align-content: center;
+  border: 1px solid var(--mp-border, #e5e7eb); background: #fff; color: var(--mp-text, #0f172a);
+  transition: background .15s ease, border-color .15s ease, transform .06s ease, box-shadow .15s ease;
+}
+.lp-btn:active{ transform: translateY(.5px); }
+.lp-btn-primary{ background: var(--mp-primary, #3B82F6); border-color: var(--mp-primary, #3B82F6); color: #fff; }
+.lp-btn-primary:hover{ background: #60a5fa; border-color: #60a5fa; box-shadow: 0 10px 24px rgba(59,130,246,.25); }
+.lp-btn-ghost{ background: color-mix(in oklab, var(--mp-primary, #3B82F6) 8%, #fff); border-color: var(--mp-primary, #3B82F6); color: var(--mp-primary, #3B82F6); }
+.lp-btn-ghost:hover{ background: color-mix(in oklab, var(--mp-primary, #3B82F6) 14%, #fff); }
+.lp-btn-light{ background: #fff; border-color: #e5e7eb; }
+.lp-btn-light:hover{ border-color: #60a5fa; }
+
+/* 반응형 */
+@media (max-width: 960px){
+  .l-grid-3{ grid-template-columns: 1fr; }
+  .l-showbox{ grid-template-columns: 1fr; }
+}
+
+/* ===== Reveal 애니메이션 ===== */
+.reveal{ opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; will-change: transform, opacity; }
+.reveal.up.is-visible{ opacity: 1; transform: translateY(0); }
+.reveal.left{ transform: translateX(-24px); }
+.reveal.left.is-visible{ opacity: 1; transform: translateX(0); }
+.reveal.right{ transform: translateX(24px); }
+.reveal.right.is-visible{ opacity: 1; transform: translateX(0); }
+.reveal.scale{ transform: scale(.96); }
+.reveal.scale.is-visible{ opacity: 1; transform: scale(1); }
+
+/* ========== Hover Lift 공통 유틸 ========== */
+.hover-lift{
+  transition: transform .18s ease, box-shadow .18s ease, filter .15s ease;
+  will-change: transform;
+}
+.hover-lift:hover{ transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.12); }
+.hover-lift:active{ transform: translateY(-2px); }
+.hover-lift:focus-visible{ outline: 2px solid color-mix(in oklab, var(--mp-primary, #3B82F6) 60%, #fff); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce){
+  .hover-lift, .hover-lift:hover, .hover-lift:active{ transition: none; transform: none; box-shadow: none; }
+}
+
+/* ========== 메인페이지 동적 컴포넌트에 바로 적용(클래스 추가 없이) ========== */
+.rec-card,
+.l-card,
+.l-step,
+.l-showbox .l-dots{
+  transition: transform .18s ease, box-shadow .18s ease, filter .15s ease;
+  will-change: transform;
+}
+.rec-card:hover,
+.l-card:hover,
+.l-step:hover,
+.l-showbox .l-dots:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+}
+/* 선택: 기존 밝기효과 유지 */
+.rec-card:hover{ filter: brightness(.98); }
+
+.canvas-wrap { position: relative; overflow: hidden; border-radius: 12px; }
+.net-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: .28; filter: saturate(1.2) blur(1px);
+  pointer-events: none;
+}

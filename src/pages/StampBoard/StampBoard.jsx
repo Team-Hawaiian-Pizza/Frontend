@@ -1,85 +1,67 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import "./StampBoard.css";
+import React, { useEffect, useMemo, useState } from "react";
+import "./StampBoard.css"; // 아래 4) CSS 만들기
+import { stampConfig } from "../../config/stampConfig";
+import { getProgress, setProgress, issueCoupon, ensureDummySeed, clearLoyalty } from "../../lib/loyalty";
 
-function StampBoard() {
-  const { id } = useParams(); // /stamp/:id 로 사용
+export default function StampBoard() {
+  const [progress, setProg] = useState(0);
+  const circles = useMemo(() => Array.from({ length: stampConfig.completionCount }), []);
 
-  // (임시) 더미 데이터
-  const [board, setBoard] = useState({
-    id: id || "2",
-    merchantName: "부대찌개",
-    benefitText: "10개 모으면 음료 1잔 서비스",
-    imageUrl: "",
-    total: 10,
-    earned: 6,
-  });
+  useEffect(() => {
+    ensureDummySeed();            // ✅ 더미데이터 주입
+    setProg(getProgress());
+  }, []);
 
-  // ✅ API 연결 포인트 (완성되면 주석 해제)
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const res = await fetch(`/api/stamps/${id}`, { credentials: "include" });
-  //       const data = await res.json();
-  //       setBoard({
-  //         id: data.id,
-  //         merchantName: data.merchant.name,
-  //         benefitText: data.benefitText,
-  //         imageUrl: data.merchant.imageUrl,
-  //         total: data.totalCount,
-  //         earned: data.earnedCount,
-  //       });
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
-  //   })();
-  // }, [id]);
+  const left = Math.max(0, stampConfig.completionCount - progress);
 
-  const total = Math.max(1, Number(board.total) || 10);
-  const earned = Math.max(0, Math.min(total, Number(board.earned) || 0));
+  const addOne = () => {
+    const next = Math.min(stampConfig.completionCount, progress + 1);
+    setProgress(next); setProg(next);
+    if (next >= stampConfig.completionCount) {
+      issueCoupon({
+        title: previewTitle(stampConfig.reward),
+        reward: stampConfig.reward,
+      });
+    }
+  };
+
+  const resetAll = () => {
+    clearLoyalty(); localStorage.removeItem("loyaltySeeded"); setProg(0);
+  };
 
   return (
-    <main className="sb-main" aria-label="Stamp Board Page">
+    <div className="sb-page">
       <div className="sb-card">
-        {/* 상단: 업체 이미지/이름/혜택 */}
-        <header className="sb-header">
-          <div className="sb-merchant">
-            <div className="sb-avatar" aria-hidden>
-              {board.imageUrl ? (
-                <img src={board.imageUrl} alt={`${board.merchantName} 이미지`} />
-              ) : (
-                <div className="sb-avatar-ph" />
-              )}
-            </div>
-            <div className="sb-merchant-meta">
-              <h1 className="sb-merchant-name">{board.merchantName}</h1>
-              <p className="sb-benefit">{board.benefitText}</p>
-            </div>
-          </div>
-        </header>
+        <div className="sb-header">
+          <h2>스탬프 도장판</h2>
+          <div className="sb-sub">완성 기준: {stampConfig.completionCount}개</div>
+          <div className="sb-badge">보상 미리보기: {previewTitle(stampConfig.reward)}</div>
+        </div>
 
-        {/* 하단: 스탬프 10개 */}
-        <section className="sb-board">
-          <div className="sb-board-inner">
-            {Array.from({ length: total }, (_, i) => {
-              const idx = i + 1;
-              const got = idx <= earned;
-              return (
-                <div
-                  key={idx}
-                  className={`sb-stamp ${got ? "is-earned" : "is-empty"}`}
-                  aria-label={`스탬프 ${idx} ${got ? "획득" : "미획득"}`}
-                >
-                  <span className="sb-stamp-index">{idx}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <div className="sb-grid">
+          {circles.map((_,i)=>(
+            <div key={i} className={`sb-dot ${i < progress ? "on" : ""}`} />
+          ))}
+        </div>
+
+        <div className="sb-actions">
+          {left > 0 ? (
+            <>
+              <button className="mp-btn mp-btn-primary" onClick={addOne}>스탬프 적립(+1)</button>
+              <span className="sb-left">남은 개수: {left}</span>
+            </>
+          ) : (
+            <div className="sb-done">🎉 완료! 쿠폰이 발급되었습니다. 쿠폰함에서 확인하세요.</div>
+          )}
+          <button className="mp-btn mp-btn-light" onClick={resetAll}>리셋</button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
 
-
-export default StampBoard;
+function previewTitle(reward) {
+  if (reward.type === "gift") return "지정 상품 1개 증정";
+  if (reward.discount?.mode === "percent") return `${reward.discount.value}% 할인`;
+  return `${Number(reward.discount?.value || 0).toLocaleString()}원 할인`;
+}
