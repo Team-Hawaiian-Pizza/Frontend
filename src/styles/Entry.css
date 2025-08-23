@@ -1,8 +1,74 @@
-.entry { display:grid; place-items:center; padding:48px 16px; }
-.entry__card { width:min(680px, 92vw); background:#fff; border-radius:16px; padding:40px 24px; box-shadow:0 8px 24px rgba(0,0,0,.06); text-align:center; }
-.entry__logo { width:100%; height:160px; border:1px dashed #ccc; border-radius:12px; display:grid; place-items:center; font-size:40px; font-weight:800; color:#555; margin:0 auto 24px; }
-.entry__slogan { font-size:24px; color:#2a2a2a; margin:8px 0 24px; }
-.entry__actions { display:grid; gap:14px; }
-.entry__btn { height:52px; border-radius:999px; font-size:18px; border:1px solid #e5e7eb; background:#f3f4f6; cursor:pointer; }
-.entry__btn:hover { filter:brightness(0.98); }
-.entry__btn--ghost { background:#fff; }
+/* EntryPage.css — 파란 버튼 버전 */
+.entry {
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+}
+
+.entry__card {
+  width: min(680px, 92vw);
+  background: #e6e6e6;
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+/* 로고 박스 */
+.entry__logo {
+  width: 100%;
+  height: 160px;
+  background: #fff;
+  border: 1px solid #e7e9ee;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  font-weight: 800;
+  color: #555;
+  margin: 0 auto 20px;
+}
+
+.entry__slogan {
+  font-size: 24px;
+  color: #111;
+  margin: 8px 0 20px;
+}
+
+.entry__actions {
+  display: grid;
+  gap: 12px;
+  width: min(560px, 92%);
+  margin: 0 auto;
+}
+
+/* ==== 버튼: 파란색 기본 ==== */
+:root{
+  --blue-500: #4361EE;
+  --blue-600: #3651d6;
+  --blue-700: #2f45be;
+  --blue-50:  #eff3ff;
+}
+
+.entry__btn {
+  height: 52px;
+  border-radius: 18px;
+  font-size: 16px;
+  border: 1px solid var(--blue-500);
+  background: var(--blue-500);
+  color: #fff;
+  cursor: pointer;
+  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+}
+.entry__btn:hover    { background: var(--blue-600); border-color: var(--blue-600); }
+.entry__btn:active   { background: var(--blue-700); border-color: var(--blue-700); }
+.entry__btn:focus-visible { outline: 3px solid rgba(67,97,238,.35); outline-offset: 2px; }
+.entry__btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* 보조 버튼(아웃라인) */
+.entry__btn--ghost {
+  background: #fff;
+  color: var(--blue-500);
+  border-color: var(--blue-500);
+}
+.entry__btn--ghost:hover { background: var(--blue-50); }
+
