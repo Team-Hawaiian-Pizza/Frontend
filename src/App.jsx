@@ -20,15 +20,18 @@ import AppLayout from "./layouts/AppLayout.jsx"
 
 function App() {
   const [isLogIn, setIsLogIn] = useState(false);
+  // [추가] 로그인 상태를 확인하는 동안 화면 렌더링을 보류하기 위한 상태
+  const [isLoading, setIsLoading] = useState(true);
 
   // 페이지 로드 시 로그인 상태 확인
   useEffect(() => {
     const userId = localStorage.getItem('user_id');
     const username = localStorage.getItem('username');
-    console.log("App.jsx 로그인 체크:", { userId, username });
     const loginStatus = !!userId && !!username;
-    console.log("로그인 상태:", loginStatus);
+    
     setIsLogIn(loginStatus);
+    // [추가] 로그인 상태 확인이 끝났으므로 로딩 상태를 false로 변경
+    setIsLoading(false);
   }, []);
 
   const handleLogin = () => {
@@ -36,7 +39,6 @@ function App() {
   }
 
   const handleLogout = () => {
-    console.log("로그아웃 버튼 클릭됨");
     localStorage.removeItem('user_id');
     localStorage.removeItem('username');
     setIsLogIn(false);
@@ -45,7 +47,11 @@ function App() {
 
   // 보호된 라우트 컴포넌트
   const ProtectedRoute = ({ children }) => {
-    console.log("ProtectedRoute 체크:", isLogIn);
+    // [수정] 로딩 중일 때는 아무것도 보여주지 않거나 로딩 스피너를 보여줍니다.
+    if (isLoading) {
+      return null; // 또는 <LoadingSpinner />
+    }
+    // 로딩이 끝난 후, 로그인 상태에 따라 페이지를 보여주거나 리디렉션합니다.
     return isLogIn ? children : <Navigate to="/login" replace />;
   };
   
