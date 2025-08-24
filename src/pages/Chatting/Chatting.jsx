@@ -162,15 +162,12 @@ const ChattingPage = () => {
       const messages = response.data;
       
       const currentUsername = localStorage.getItem('username');
-      const formattedMessages = messages.map(msg => {
-        console.log(`[loadMessages] Comparing: (msg.sender_id) ${msg.sender_id} === (currentUsername) ${currentUsername}`); // 비교 값 확인
-        return {
-          id: msg.id,
-          sender: msg.sender_id,
-          text: msg.content,
-          isMe: msg.sender_id === currentUsername
-        };
-      });
+      const formattedMessages = messages.map(msg => ({
+        id: msg.id,
+        sender: msg.sender_id,
+        text: msg.content,
+        isMe: msg.sender_id === currentUsername
+      }));
       
       setThreads(prev => ({ ...prev, [conversationId]: formattedMessages }));
     } catch (error) {
@@ -220,7 +217,6 @@ const ChattingPage = () => {
 
   // 채팅 선택 핸들러
   const handleChatSelect = (chat) => {
-    console.log('Selected Chat Object:', chat); // 선택된 채팅 객체 정보 확인
     // 기존 웹소켓 연결 종료
     if (wsRef.current) {
       wsRef.current.close();
