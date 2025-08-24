@@ -17,8 +17,11 @@ const ChattingPage = () => {
   const [newRoomTarget, setNewRoomTarget] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const wsRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
   // 자동 스크롤 함수
   const scrollToBottom = () => {
@@ -29,8 +32,21 @@ const ChattingPage = () => {
   // 타이핑 상태 전송
   const sendTypingStatus = async (typing) => {
     if (!selectedChat) return;
+    
+    const currentUsername = localStorage.getItem('username');
+    
+    // 웹소켓이 연결되어 있으면 웹소켓으로 전송
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'typing',
+        user_id: currentUsername,
+        is_typing: typing
+      }));
+      return;
+    }
+    
+    // 웹소켓이 없으면 HTTP API로 전송 (백엔드에서 지원하는 경우)
     try {
-      const currentUsername = localStorage.getItem('username');
       await chatApi.post(`/conversations/${selectedChat.id}/typing/`, {
         user_id: currentUsername,
         is_typing: typing
@@ -94,6 +110,99 @@ const ChattingPage = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
       handleSend();
+    }
+  };
+
+  // 웹소켓 연결
+  const connectWebSocket = (conversationId) => {
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//15.165.220.74:8000/ws/chat/${conversationId}/`;
+      
+      wsRef.current = new WebSocket(wsUrl);
+      
+      wsRef.current.onopen = () => {
+        setIsConnected(true);
+        console.log('웹소켓 연결됨');
+      };
+      
+      wsRef.current.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      };
+      
+      wsRef.current.onclose = () => {
+        setIsConnected(false);
+        console.log('웹소켓 연결 끊어짐');
+        // 5초 후 재연결 시도
+        setTimeout(() => {
+          if (selectedChat) {
+            connectWebSocket(selectedChat.id);
+          }
+        }, 5000);
+      };
+      
+      wsRef.current.onerror = (error) => {
+        setIsConnected(false);
+        console.error('웹소켓 오류:', error);
+      };
+    } catch (error) {
+      console.error('웹소켓 연결 실패:', error);
+      setIsConnected(false);
+    }
+  };
+
+  // 웹소켓 메시지 처리
+  const handleWebSocketMessage = (data) => {
+    switch(data.type) {
+      case 'chat_message':
+        // 새 메시지 추가
+        if (data.message.sender_id !== localStorage.getItem('username')) {
+          const newMessage = {
+            id: data.message.id,
+            sender: data.message.sender_id,
+            text: data.message.content,
+            isMe: false
+          };
+          
+          setThreads(prev => {
+            const conversationId = selectedChat?.id;
+            if (!conversationId) return prev;
+            const old = prev[conversationId] || [];
+            return { ...prev, [conversationId]: [...old, newMessage] };
+          });
+        }
+        break;
+        
+      case 'typing_status':
+        // 타이핑 상태 표시
+        const currentUsername = localStorage.getItem('username');
+        if (data.user_id !== currentUsername) {
+          setIsTyping(data.is_typing);
+          setTypingUser(data.user_id);
+        }
+        break;
+    }
+  };
+
+  // HTTP 폴링으로 새 메시지 확인
+  const startMessagePolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    
+    pollingIntervalRef.current = setInterval(async () => {
+      if (selectedChat && !isConnected) {
+        await loadMessages(selectedChat.id);
+      }
+    }, 3000);
+  };
+
+  // 폴링 중지
+  const stopMessagePolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
   };
 
@@ -188,10 +297,28 @@ const ChattingPage = () => {
 
   // 채팅 선택 핸들러
   const handleChatSelect = (chat) => {
+    // 기존 웹소켓 연결 종료
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    stopMessagePolling();
+    
     setSelectedChat(chat);
+    
+    // 메시지 로드
     if (!threads[chat.id]) {
       loadMessages(chat.id);
     }
+    
+    // 웹소켓 연결 시도
+    connectWebSocket(chat.id);
+    
+    // 웹소켓 연결이 안되면 폴링 시작
+    setTimeout(() => {
+      if (!isConnected) {
+        startMessagePolling();
+      }
+    }, 2000);
   };
 
   // 선택된 채팅이 변경될 때 메시지 로드
@@ -212,6 +339,19 @@ const ChattingPage = () => {
     scrollToBottom();
   }, [currentMessages]);
 
+  // 컴포넌트 언마운트 시 정리
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      stopMessagePolling();
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // 메시지 전송
   const handleSend = async () => {
     if (!selectedChat || !input.trim()) return;
@@ -227,6 +367,31 @@ const ChattingPage = () => {
       clearTimeout(typingTimeoutRef.current);
     }
 
+    // 웹소켓이 연결되어 있으면 웹소켓으로 전송
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'chat_message',
+        sender_id: currentUsername,
+        content: text,
+        message_type: 'text'
+      }));
+      
+      // 내 메시지를 즉시 UI에 추가
+      const tempMessage = {
+        id: Date.now(),
+        sender: currentUsername,
+        text: text,
+        isMe: true
+      };
+      
+      setThreads(prev => {
+        const old = prev[conversationId] || [];
+        return { ...prev, [conversationId]: [...old, tempMessage] };
+      });
+      return;
+    }
+
+    // 웹소켓이 없으면 HTTP API로 전송
     try {
       const response = await chatApi.post(`/conversations/${conversationId}/messages/send/`, {
         sender_id: currentUsername,
@@ -322,7 +487,18 @@ const ChattingPage = () => {
 
         {/* 오른쪽: 채팅 내용 */}
         <div className="chat-content-section">
-          <div className="chat-content-header">{selectedChat?.name || '채팅'}</div>
+          <div className="chat-content-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{selectedChat?.name || '채팅'}</span>
+            <span style={{ 
+              fontSize: '12px', 
+              padding: '4px 8px', 
+              borderRadius: '10px',
+              backgroundColor: isConnected ? '#28a745' : '#dc3545',
+              color: 'white'
+            }}>
+              {isConnected ? '실시간' : 'HTTP 모드'}
+            </span>
+          </div>
 
           <div className="chat-messages">
             {currentMessages.map(message => (
