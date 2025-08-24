@@ -78,6 +78,7 @@ const ConnectionsPage = () => {
         alert('친구 추가 요청을 성공적으로 보냈습니다.');
       } else {
         alert('처리되었습니다.');
+        await fetchData();
       }
     } catch (err) {
       console.error('친구 추가 실패:', err);

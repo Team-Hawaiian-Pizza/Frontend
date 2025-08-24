@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
@@ -12,6 +11,10 @@ export default function LocationPage() {
   const [userId, setUserId] = useState(null);
   const [username, setUsername] = useState(null);
 
+  const [province, setProvince] = useState("");
+  const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(false); 
+  const [err, setErr] = useState("");
 
   const [isValidating, setIsValidating] = useState(true);
 
@@ -33,10 +36,6 @@ export default function LocationPage() {
   const cityOptions = useMemo(() => (province ? regions[province] || [] : []), [province]);
   const canSubmit = !!(province && city && userId) && !loading;
 
-
-
-
-
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!canSubmit) return;
@@ -44,7 +43,6 @@ export default function LocationPage() {
     setErr("");
     setLoading(true);
     try {
-
       const payload = {
         user_id: Number(userId),
         province,

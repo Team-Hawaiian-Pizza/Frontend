@@ -54,10 +54,8 @@ export default function SignUpPage() {
       
       localStorage.setItem("signup_user_id", String(userId));
       localStorage.setItem("signup_username", id);
-
       // [수정] 직접 navigate를 호출하는 대신, 성공 상태를 true로 변경합니다.
       setSignupSuccess(true);
-
     } catch (error) {
       console.error("회원가입 실패:", error.response || error);
       let errorMessage = "회원가입 중 오류가 발생했습니다.";
@@ -146,4 +144,3 @@ export default function SignUpPage() {
     </section>
   );
 }
-
