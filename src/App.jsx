@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-
 import Mainpage from "./pages/Mainpage/Mainpage.jsx";
 import Entry from "./pages/Entry/Entry.jsx";
 import Login from "./pages/Login/Login.jsx";
@@ -15,7 +14,6 @@ import Mypage from "./pages/Mypage/Mypage.jsx";
 import ModifyCard from "./pages/ModifyCard/ModifyCard.jsx";
 import StampBoard from "./pages/StampBoard/StampBoard.jsx";
 import Coupon from "./pages/Coupon/Coupon.jsx";
-
 import AppLayout from "./layouts/AppLayout.jsx"
 
 function App() {
