@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import chatApi from '../../api/chatApi';
+import api from '../../api/axios'; // 코어 API 추가
 import './Chatting.css';
 
 const ChattingPage = () => {
@@ -41,7 +42,8 @@ const ChattingPage = () => {
   // 웹소켓 연결
   const connectWebSocket = (conversationId) => {
     try {
-      const wsUrl = `ws://localhost:8001/ws/chat/${conversationId}/`;
+      const userId = localStorage.getItem('user_id');
+      const wsUrl = `ws://15.165.220.74:8001/ws/chat/${conversationId}/?user_id=${userId}`;
       
       wsRef.current = new WebSocket(wsUrl);
       
@@ -112,7 +114,7 @@ const ChattingPage = () => {
         console.log('폴링 중... 채팅방:', currentChat.name);
         await loadMessages(currentChat.id);
       }
-    }, 3000);
+    }, 300);
   };
 
   // 폴링 중지
@@ -160,12 +162,15 @@ const ChattingPage = () => {
       const messages = response.data;
       
       const currentUsername = localStorage.getItem('username');
-      const formattedMessages = messages.map(msg => ({
-        id: msg.id,
-        sender: msg.sender_id,
-        text: msg.content,
-        isMe: msg.sender_id === currentUsername
-      }));
+      const formattedMessages = messages.map(msg => {
+        console.log(`[loadMessages] Comparing: (msg.sender_id) ${msg.sender_id} === (currentUsername) ${currentUsername}`); // 비교 값 확인
+        return {
+          id: msg.id,
+          sender: msg.sender_id,
+          text: msg.content,
+          isMe: msg.sender_id === currentUsername
+        };
+      });
       
       setThreads(prev => ({ ...prev, [conversationId]: formattedMessages }));
     } catch (error) {
@@ -180,12 +185,13 @@ const ChattingPage = () => {
     
     try {
       const currentUsername = localStorage.getItem('username');
-      await chatApi.post('/conversations/', {
+      // 가설: 대화방 생성은 Core API를 통해 이루어져야 함
+      await api.post('/conversations/', { // 'api' (core) 사용
         participant1_id: currentUsername,
         participant2_id: newRoomTarget.trim()
       });
       
-      // 새 채팅방이 생성되면 목록 새로고침
+      // 새 채팅방이 생성되면 목록 새로고침 (chatApi 사용)
       await loadChatList();
       setShowCreateRoom(false);
       setNewRoomTarget('');
@@ -214,6 +220,7 @@ const ChattingPage = () => {
 
   // 채팅 선택 핸들러
   const handleChatSelect = (chat) => {
+    console.log('Selected Chat Object:', chat); // 선택된 채팅 객체 정보 확인
     // 기존 웹소켓 연결 종료
     if (wsRef.current) {
       wsRef.current.close();
@@ -399,15 +406,6 @@ const ChattingPage = () => {
         <div className="chat-content-section">
           <div className="chat-content-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>{selectedChat?.name || '채팅'}</span>
-            <span style={{ 
-              fontSize: '12px', 
-              padding: '4px 8px', 
-              borderRadius: '10px',
-              backgroundColor: isConnected ? '#28a745' : '#dc3545',
-              color: 'white'
-            }}>
-              {isConnected ? '연결됨' : '연결안됨'}
-            </span>
           </div>
 
           <div className="chat-messages">
@@ -415,7 +413,6 @@ const ChattingPage = () => {
               <div key={message.id} className={`message ${message.isMe ? 'my-message' : ''}`}>
                 {!message.isMe && <div className="chat-avatar-small"></div>}
                 <div className="message-bubble">{message.text}</div>
-                {message.isMe && <div className="chat-avatar-small"></div>}
               </div>
             ))}
             <div ref={messagesEndRef} />

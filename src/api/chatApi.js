@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const chatApi = axios.create({
-  baseURL: 'http://15.165.220.74:8000/api/chat',
+  baseURL: 'http://15.165.220.74:8000/api/chat/',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
