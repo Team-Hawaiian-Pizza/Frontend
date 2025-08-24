@@ -35,7 +35,7 @@ const DetailPage = () => {
 
   // 1대1 채팅하기: chatting 페이지로 이동
   const handleChat = () => {
-    navigate('/chat'); // /chatting 경로로 이동
+    navigate(`/chat/${profile.id}?name=${encodeURIComponent(profile.name)}`); // /chatting 경로로 이동
   };
 
   // 코드 요청하기: 명함 주인에게 코드 요청
@@ -47,7 +47,6 @@ const DetailPage = () => {
   return (
     <div className="detail-page">
       <div className="detail-container">
-        {/* 왼쪽: 명함 정보 */}
         <div className="detail-left">
           <div className="detail-card">
             <div className="detail-avatar">
@@ -67,9 +66,7 @@ const DetailPage = () => {
           </div>
         </div>
         
-        {/* 오른쪽: 추가 정보 */}
         <div className="detail-right">
-          {/* 3. 추가 설명 */}
           <div className="detail-section">
             <h3>추가 설명</h3>
             {profile.description.split('\n').map((line, index) => (
@@ -82,7 +79,7 @@ const DetailPage = () => {
             </div>
           </div>
           
-          {/* 4. 후기 */}
+          {/* 후기 */}
           <div className="detail-section">
             <h3>후기</h3>
             {profile.reviews.length > 0 ? (
@@ -94,7 +91,7 @@ const DetailPage = () => {
             )}
           </div>
           
-          {/* 5. 매너 온도 */}
+          {/* 매너 온도 */}
           <div className="detail-section">
             <h3>매너 온도</h3>
             <div className="detail-manner">

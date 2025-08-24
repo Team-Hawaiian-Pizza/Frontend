@@ -1,46 +1,59 @@
+/* ============================= */
+/* 페이지 래퍼 */
+/* ============================= */
 .detail-page {
-  max-width: 1200px;
-  margin: 24px auto 80px;
-  padding: 0 20px;
+  max-width: 1120px;
+  margin: 32px auto 96px;
+  padding: 0 24px;
+  background: #F9FAFB; /* 페이지 전체 배경 */
 }
 
+/* ============================= */
+/* 메인 컨테이너: 라이트 패널 느낌 */
+/* ============================= */
 .detail-container {
   display: flex;
-  gap: 40px;
-  background: #f5f5f7;
-  border: 1px solid #e7e7e7;
+  gap: 32px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 20px;
-  padding: 40px;
+  padding: 32px;
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.06),
+              0 1px 0 rgba(17,24,39,0.04);
 }
 
-/* ── 왼쪽 섹션 (명함) ─────────────────────────────────── */
+/* ============================= */
+/* 왼쪽 섹션 (명함 카드 + 버튼) */
+/* ============================= */
 .detail-left {
   flex: 1;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 300px;
+  gap: 16px;
 }
 
+/* 명함 카드 */
 .detail-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
   background: #fff;
   border-radius: 16px;
-  border: 1px solid #ececec;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 2px rgba(17,24,39,.04);
 }
 
+/* 프로필 아바타 */
 .detail-avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid #e5e5e5;
-  margin-bottom: 20px;
+  border: 1px solid #E5E7EB;
+  margin-bottom: 16px;
 }
 .detail-avatar img {
   width: 100%;
@@ -48,19 +61,29 @@
   object-fit: cover;
 }
 
+/* 이름 */
 .detail-name {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
-  color: #111;
+  color: #1D4ED8; /* 포인트 블루 */
   margin-bottom: 12px;
 }
 
+/* 연락처 정보 */
 .detail-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 16px;
-  color: #555;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* 승인 전: 전체를 하나의 배지처럼 */
+.detail-info.blurred {
+  background: #EEF2F7;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 12px 14px;
 }
 .detail-info.blurred span {
   filter: blur(4px);
@@ -68,76 +91,118 @@
   pointer-events: none;
 }
 
+/* 왼쪽 버튼 영역 */
 .detail-buttons {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 .detail-button {
   width: 100%;
-  padding: 16px;
-  background: #d9d9d9;
-  border: none;
+  padding: 14px;
+  background: #F3F4F6; /* 연한 회색 버튼 */
+  color: #111827;
+  border: 1px solid #E5E7EB;
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
+  transition: background 120ms ease-out,
+              color 120ms ease-out,
+              border-color 120ms ease-out,
+              transform 80ms ease-out;
+}
+.detail-button:hover {
+  background: #3B82F6; /* 호버 시 파란 포인트 */
+  color: #fff;
+  border-color: #3B82F6;
+}
+.detail-button:active {
+  transform: scale(0.98);
 }
 
-/* ── 오른쪽 섹션 (상세 정보) ──────────────────────────── */
+/* ============================= */
+/* 오른쪽 섹션 (추가 설명/후기/매너온도) */
+/* ============================= */
 .detail-right {
   flex: 2;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 }
 
+/* 박스 공통 */
 .detail-section {
-  padding: 24px;
+  padding: 20px 22px;
   background: #fff;
   border-radius: 16px;
-  border: 1px solid #ececec;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 2px rgba(17,24,39,0.04);
 }
 .detail-section h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
-  margin-top: 0;
-  margin-bottom: 12px;
+  margin: 0 0 10px;
+  color: #111827;
 }
-
 .detail-section p {
-  font-size: 16px;
-  color: #555;
+  font-size: 15px;
+  color: #374151;
   margin: 0;
 }
 
+/* 태그: 연한 블루 배지 */
+.detail-tags {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .detail-tags span {
   display: inline-block;
-  font-size: 14px;
-  font-weight: 600;
-  background: #eee;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 4px 10px;
-  margin-right: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1D4ED8;
+  background: #EEF5FF;
+  border: 1px solid #D1E4FF;
+  border-radius: 999px;
+  padding: 6px 10px;
 }
 
+/* ============================= */
+/* 매너 온도 */
+/* ============================= */
 .detail-manner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px; /* 바와 숫자 사이 간격 */
 }
 .manner-bar-container {
-  flex: 1;
-  height: 10px;
-  background: #e5e5e5;
-  border-radius: 5px;
+  position: relative;
+  flex: 1; /* 가로 길이 꽉 채우기 */
+  height: 14px;
+  background: #E5E7EB; /* 연회색 트랙 */
+  border: 1px solid #E5E7EB;
+  border-radius: 999px;
+  overflow: hidden;
 }
 .manner-bar {
-  height: 100%;
-  background: #ff5722;
-  border-radius: 5px;
-  transition: width 0.3s ease;
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%; /* JS에서 width: ${mannerTemp}% 주입 */
+  background: linear-gradient(90deg, #60A5FA, #1D4ED8); /* hover → accent 블루 그라데이션 */
+  border-right: 1px solid rgba(0,0,0,0.06);
+  transition: width .30s ease; /* 값 변경 시 부드럽게 */
 }
 .detail-manner span {
-  font-weight: bold;
+  font-weight: 800;
+  color: #111827;
+  min-width: 48px; /* 숫자 폭 확보(예: 85℃) */
+  text-align: right;
+}
+
+/* ============================= */
+/* 반응형 */
+/* ============================= */
+@media (max-width: 920px){
+  .detail-container { flex-direction: column; }
 }
