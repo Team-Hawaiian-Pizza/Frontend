@@ -1,51 +1,54 @@
 import React from 'react'
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import FriendCard from '../../components/FriendCard';
 import FofCard from '../../components/FofCard';
+import api from '../../api/axios';
 
 import './Search.css'
-// 친구 데이터
-const FRIENDS = [
-  {id: 1, name: '안뇽이', img: '/friend-1.jpg'},
-  {id: 2, name: '하텍이', img: '/friend-1.jpg'},
-  {id: 3, name: '오호관', img: '/friend-1.jpg'}
-];
-
-// 친구의 친구 데이터
-const FOF = [
-  {id: 101, name: '인덕이', img: '/friend-1.jpg', phone:'010-1234-5678', email:'induk@naver.com', address: '서울시 강서구', approved: false},
-  {id: 102, name: '홍길동', img: '/friend-1.jpg', phone:'010-2345-6789', email: 'hong@naver.com', address: '서울시 양천구', approved: false},
-  {id: 103, name: '채부경', img: '/friend-1.jpg', phone: '010-3456-7890', email: 'chae@naver.com', address: '서울시 구로구', approved: true},
-  {id: 104, name: '박준희', img: '/friend-1.jpg', phone: '010-4567-8901', email: 'park@naver.com', address: '서울시 영등포구', approved: false},
-  {id: 105, name: '강태은', img: '/friend-1.jpg', phone: '010-5678-9012', email: 'kang@naver.com', address: '서울시 금천구', approved: false},
-  {id: 106, name: '꼬깔콘', img: '/friend-1.jpg', phone: '010-6789-0123', email: 'coco@naver.com', address: '서울시 동작구', approved: false}
-];
-
-const RELATIONSHIPS = [
-    { friendId: 1, fofId: 101 },
-    { friendId: 1, fofId: 102 }, 
-    { friendId: 1, fofId: 103 }, 
-    { friendId: 2, fofId: 104 }, 
-    { friendId: 3, fofId: 105 }, 
-    { friendId: 3, fofId: 106 }, 
-];
 
 const Search = () => {
   const [q, setQ] = useState(""); //검색어
-  const [fof, setFof] = useState(FOF);
-  const navigate = useNavigate(); 
+  const [fof, setFof] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [friendsRes, fofRes] = await Promise.all([
+          api.get('/connections/requests'),
+          api.get('/users/all')
+        ]);
+        setFriends(friendsRes.data);
+        setFof(fofRes.data);
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+        setFriends([]);
+        setFof([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []); 
 
   // '요청' 버튼 클릭 시 approved 상태를 변경하는 함수
-  const approveFof = (id) => {
-    setFof(list => {
-      list.map(v => {
-        if (v.id === id) {
-          return {...v, approved: true};
-        }
-        return v;
-      })
-    })
+  const approveFof = async (id) => {
+    try {
+      await api.post(`/connections/accept/${id}`);
+      setFof(list => 
+        list.map(v => 
+          v.id === id ? {...v, approved: true} : v
+        )
+      );
+    } catch (error) {
+      console.error('승인 실패:', error);
+      alert('승인 요청에 실패했습니다.');
+    }
   };
 
   const goToDetail = (id) => {
@@ -53,21 +56,49 @@ const Search = () => {
     navigate(`/profile/${id}`); 
   };
 
-  // 관계 데이터 기반으로 친구-건너건너 쌍을 매칭하는 새로운 배열을 생성합니다.
+  // 실제 사용자 데이터와 친구 데이터를 기반으로 매칭
   const friendFofPairs = useMemo(() => {
-    return RELATIONSHIPS.map(rel => {
-      const friend = FRIENDS.find(f => f.id === rel.friendId);
-      const fofItem = fof.find(fof => fof.id === rel.fofId);
-      return { friend, fof: fofItem };
-    });
-  }, [fof]);
+    if (!Array.isArray(friends) || !Array.isArray(fof)) return [];
+    
+    // 실제 사용자 데이터 처리 - 로그인한 사용자 제외하고 다른 사용자들을 건너건너로 표시
+    const currentUserId = parseInt(localStorage.getItem('user_id'));
+    const otherUsers = fof.results ? fof.results.filter(user => user.id !== currentUserId) : [];
+    
+    return otherUsers.slice(0, 10).map((user, index) => ({
+      friend: { 
+        id: `friend_${index}`, 
+        name: `공통 친구 ${index + 1}`, 
+        img: '/friend-1.jpg' 
+      },
+      fof: {
+        id: user.id,
+        name: user.name,
+        img: user.avatar_url || '/friend-1.jpg',
+        phone: user.phone || '010-0000-0000',
+        email: user.email,
+        address: `${user.province_name} ${user.city_name}`,
+        approved: false
+      }
+    }));
+  }, [friends, fof]);
 
-  
-  const onSubmit = (e) => {
-    e.preventDefault(); // 지금은 검색 미구현: 새로고침만 막기
-    console.log('검색 클릭:', q);
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!q.trim()) return;
+    
+    try {
+      const response = await api.get(`/connections/search?q=${encodeURIComponent(q)}`);
+      setFof(response.data);
+    } catch (error) {
+      console.error('검색 실패:', error);
+      alert('검색에 실패했습니다.');
+    }
   };
 
+
+ if (loading) {
+    return <div style={{ padding: 20 }}>로딩 중...</div>;
+  }
 
  return (
   <div className='searchpage'>
