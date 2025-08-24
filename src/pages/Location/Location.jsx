@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import api from "../../api/axios";           // alias 없으면 이 경로 사용
+import api from "../../api/axios";
 import regions from "../../data/regions";
 import "../../styles/Location.css";
 
@@ -36,7 +36,7 @@ export default function LocationPage() {
       localStorage.setItem("region_sigungu", sigungu);
 
       // 실제 회원가입 호출
-      await api.post("/auth/signup", {
+      await api.post("/users/signup/location", {
         id: signupId,
         password: signupPw,
         sido,

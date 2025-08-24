@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 import CardForm from "../CardForm/CardForm";
+import api from "../../api/axios";
+import { useNavigate } from "react-router-dom";
 
 function CardCreation() {
+  const navigate = useNavigate();
   const [preview, setPreview] = useState({
     name: "", phone: "", email: "", address: "", gender: "", age: "",
     tags: [], intro: "", profileUrl: ""
   });
 
   const handleSubmit = async (formData) => {
-    // TODO: 실제 API 연동
-    // 예시: alert("저장 완료");
+    try {
+      await api.post("/users/signup/card", formData);
+      alert("명함이 생성되었습니다!");
+      navigate("/");
+    } catch (error) {
+      console.error("카드 생성 실패:", error);
+      alert("명함 생성에 실패했습니다. 다시 시도해주세요.");
+    }
   };  
   const handlePreviewChange = (v) => setPreview(v);
   return (
