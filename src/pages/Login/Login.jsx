@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import { api } from "@/api/axios"; // 없으면 fetch로 교체
+import api from "../../api/axios";
 import "@/styles/Login.css";
 
-export default function LoginPage() {
+export default function LoginPage({ onLogin }) {
   const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
-  const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,21 +12,42 @@ export default function LoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
-    if (!id || !pw) {
-      setErr("ID와 Password를 입력해 주세요.");
+    console.log("로그인 시도:", id);
+    
+    if (!id) {
+      setErr("ID를 입력해 주세요.");
       return;
     }
     setLoading(true);
     try {
-      // 백엔드 경로에 맞춰 조정
-      const { data } = await api.post("/auth/login", { id, password: pw });
-      // 예시: 토큰 저장 후 이동
-      if (data?.token) localStorage.setItem("token", data.token);
-      navigate("/"); // 로그인 후 이동 경로
+      // ID만으로 로그인 요청
+      console.log("API 호출:", { username: id });
+      const { data } = await api.post("/users/login", { username: id });
+      console.log("로그인 응답:", data);
+      
+      // 사용자 정보 저장
+      if (data?.user_id) {
+        localStorage.setItem("user_id", data.user_id.toString());
+        localStorage.setItem("username", id);
+        console.log("localStorage 저장 완료:", {
+          user_id: localStorage.getItem("user_id"),
+          username: localStorage.getItem("username")
+        });
+        
+        // 로그인 상태 업데이트 후 페이지 이동
+        console.log("로그인 콜백 호출");
+        if (onLogin) onLogin();
+        console.log("페이지 이동 시작");
+        navigate("/", { replace: true });
+      } else {
+        console.log("user_id가 없음:", data);
+        navigate("/");
+      }
     } catch (e) {
+      console.error("로그인 실패:", e);
       const msg =
         e?.response?.data?.message ||
-        "ID 또는 비밀번호가 올바르지 않습니다.";
+        "존재하지 않는 사용자입니다.";
       setErr(msg);
     } finally {
       setLoading(false);
@@ -41,42 +60,14 @@ export default function LoginPage() {
       <div className="login__hero">건너건너</div>
 
       <form className="login__form" onSubmit={onSubmit}>
-        <label className="login__label">ID</label>
+        <label className="login__label">사용자 ID</label>
         <input
           className="login__input"
-          placeholder="ID"
+          placeholder="사용자 ID를 입력하세요"
           value={id}
           onChange={(e) => setId(e.target.value)}
           autoComplete="username"
         />
-
-        <label className="login__label" style={{ marginTop: 20 }}>
-          PassWord
-        </label>
-        <div className="login__pwdwrap">
-          <input
-            className="login__input"
-            placeholder="PassWord"
-            type={showPw ? "text" : "password"}
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            autoComplete="current-password"
-          />
-          <button
-            type="button"
-            className="login__pwdtoggle"
-            aria-label={showPw ? "비밀번호 숨기기" : "비밀번호 보기"}
-            onClick={() => setShowPw((v) => !v)}
-          >
-            {/* 눈 아이콘 (SVG) */}
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M12 5c-5 0-9 4.5-9 7s4 7 9 7 9-4.5 9-7-4-7-9-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-        </div>
 
         {err && <div className="login__error">{err}</div>}
 

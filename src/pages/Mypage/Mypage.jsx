@@ -1,50 +1,68 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MyPage.css";
 import BusinessCard from "../../components/BusinessCard";
+import api from "../../api/axios";
 // 만약 로고를 카드에 넣고 싶다면 아래처럼 프로젝트 경로로 가져오세요
 // import gngnLogo from "@/assets/gngnLogo.png";
 
 function MyPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
-  const [profile] = useState({
-    name: "김인하",
-    sex: "M",
-    age: 23,
-    avatarUrl: "",
-    phone: "010-1234-5678",
-    email: "me@example.com",
-    address: "서울시 강남구",
-    tag: "React",
-    temperature: 76.3,
-  });
+  const [profile, setProfile] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [stampBoards, setStampBoards] = useState([]);
 
-  const [friends] = useState([
-    { id: 1, name: "김두현", avatar: "", lastMsg: "Live Laugh Love - Sasha Alex" },
-    { id: 2, name: "쉬수기", avatar: "", lastMsg: "약이와 나의 바다 - 아이유" },
-    { id: 3, name: "김영호", avatar: "", lastMsg: "macchine (pure white) - Lupi" },
-    { id: 4, name: "김민규", avatar: "", lastMsg: "The Love - Quinn XCII" },
-    { id: 5, name: "김민규", avatar: "", lastMsg: "The Love - Quinn XCII" },
-    { id: 6, name: "김민규", avatar: "", lastMsg: "The Love - Quinn XCII" },
-    { id: 7, name: "김민규", avatar: "", lastMsg: "The Love - Quinn XCII" },
-  ]);
-
-  const [stampBoards] = useState([
-    { id: 1, title: "빵집" },
-    { id: 2, title: "에어컨" },
-    { id: 3, title: "빵집" },
-    { id: 4, title: "에어컨" },
-    { id: 5, title: "빵집" },
-    { id: 6, title: "에어컨" },
-  ]);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        const [profileRes, allUsersRes, stampsRes] = await Promise.all([
+          api.get(`/users/profiles/${userId}`),
+          api.get('/users/all'),
+          api.get('/rewards/brands')
+        ]);
+        
+        // 실제 백엔드 데이터로 설정
+        setProfile({
+          name: profileRes.data.name,
+          sex: profileRes.data.gender === 'male' ? 'M' : 'F',
+          age: profileRes.data.age_band,
+          avatarUrl: profileRes.data.avatar_url || "",
+          phone: profileRes.data.masked_phone || "010-0000-0000",
+          email: profileRes.data.masked_email,
+          address: `${profileRes.data.province_name} ${profileRes.data.city_name}`,
+          tag: "React",
+          temperature: 75, // 기본값 (백엔드에서 manner_temperature가 없음)
+        });
+        
+        // 로그인한 사용자 제외하고 다른 사용자들을 친구목록처럼 표시
+        const currentUserId = parseInt(localStorage.getItem('user_id'));
+        const otherUsers = allUsersRes.data.results.filter(user => user.id !== currentUserId);
+        setFriends(otherUsers.slice(0, 10) || []);
+        setStampBoards(stampsRes.data || []);
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+        // 실패 시 기본값 유지
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   const handleEditCard = () => navigate("/card/edit");
   const handleCoupon = () => navigate("/coupon");
   const handleOpenStamp = (id) => navigate(`/stamp/${id}`);
   const handleChat = (id) => navigate(`/chat/${id}`);
 
-  const clampedTemp = Math.max(0, Math.min(100, Number(profile.temperature) || 0));
+  const clampedTemp = profile ? Math.max(0, Math.min(100, Number(profile.temperature) || 0)) : 0;
+
+  if (loading || !profile) {
+    return <div style={{ padding: 20 }}>로딩 중...</div>;
+  }
 
   return (
     <main className="mp-main" aria-label="My Page">
@@ -90,12 +108,12 @@ function MyPage() {
 
             {/* ✅ 친구목록 헤더 + 인원수 */}
             <div className="mp-friends-header">
-              친구목록 : <strong>{friends.length}</strong>
+              친구목록 : <strong>{Array.isArray(friends) ? friends.length : 0}</strong>
             </div>
 
             {/* 스크롤 가능한 친구목록 */}
             <div className="mp-friends" role="list">
-              {friends.map((f) => (
+              {Array.isArray(friends) && friends.length > 0 ? friends.map((f) => (
                 <button
                   key={f.id}
                   type="button"
@@ -104,14 +122,18 @@ function MyPage() {
                   role="listitem"
                 >
                   <div className="mp-friend-avatar">
-                    {f.avatar ? <img src={f.avatar} alt={`${f.name} 프로필`} /> : <div className="mp-friend-ph" />}
+                    {f.avatar_url ? <img src={f.avatar_url} alt={`${f.name} 프로필`} /> : <div className="mp-friend-ph" />}
                   </div>
                   <div className="mp-friend-meta">
-                    <div className="mp-friend-name">{f.name}</div>
-                    <div className="mp-friend-msg">{f.lastMsg ?? ""}</div>
+                    <div className="mp-friend-name">{f.name || f.username}</div>
+                    <div className="mp-friend-msg">{f.intro || f.lastMsg || "안녕하세요!"}</div>
                   </div>
                 </button>
-              ))}
+              )) : (
+                <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
+                  친구가 없습니다
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -126,15 +148,20 @@ function MyPage() {
           </div>
 
           <div className="mp-stamp-grid">
-            {stampBoards.map((s) => (
+            {Array.isArray(stampBoards) && stampBoards.length > 0 ? stampBoards.map((s) => (
               <article key={s.id} className="mp-stamp-card">
                 <div className="mp-stamp-thumb" aria-hidden />
-                <div className="mp-stamp-title">{s.title}</div>
+                <div className="mp-stamp-title">{s.name || s.title}</div>
+                <div style={{fontSize: '12px', color: '#666', marginBottom: '8px'}}>{s.benefit}</div>
                 <button type="button" className="mp-btn mp-btn-light" onClick={() => handleOpenStamp(s.id)}>
                   도장판 보기
                 </button>
               </article>
-            ))}
+            )) : (
+              <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
+                등록된 브랜드가 없습니다
+              </div>
+            )}
           </div>
         </section>
       </div>
