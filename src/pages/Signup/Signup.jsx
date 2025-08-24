@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // useEffect 임포트
 import { Link, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 import "../../styles/Signup.css";
 
 export default function SignUpPage() {
@@ -9,7 +10,19 @@ export default function SignUpPage() {
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // [추가] 회원가입 성공 후 네비게이션을 트리거하기 위한 상태
+  const [signupSuccess, setSignupSuccess] = useState(false);
+
+  // [추가] signupSuccess 상태가 true로 바뀌면, /location 페이지로 이동합니다.
+  useEffect(() => {
+    if (signupSuccess) {
+      console.log("useEffect: signupSuccess가 true이므로 /location으로 이동합니다.");
+      navigate('/location');
+    }
+  }, [signupSuccess, navigate]);
 
   const validate = () => {
     if (!id || !pw || !pw2) return "모든 항목을 입력해 주세요.";
@@ -20,19 +33,50 @@ export default function SignUpPage() {
     return "";
   };
 
-  const goLocation = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const v = validate();
-    if (v) { setErr(v); return; }
+    const validationError = validate();
+    if (validationError) {
+      setErr(validationError);
+      return;
+    }
     setErr("");
+    setLoading(true);
 
-    // 다음 단계에서 사용할 임시 저장
-    localStorage.setItem("signup_id", id);
-    localStorage.setItem("signup_pw", pw);
-    localStorage.removeItem("region_sido");
-    localStorage.removeItem("region_sigungu");
+    try {
+      const payload = { username: id, password: pw };
+      const response = await api.post("/users/signup", payload);
+      const userId = response.data?.user_id || response.data?.id;
+      
+      if (!userId) {
+        throw new Error("서버로부터 사용자 ID를 받지 못했습니다.");
+      }
+      
+      localStorage.setItem("signup_user_id", String(userId));
+      localStorage.setItem("signup_username", id);
 
-    navigate("/location");
+      // [수정] 직접 navigate를 호출하는 대신, 성공 상태를 true로 변경합니다.
+      setSignupSuccess(true);
+
+    } catch (error) {
+      console.error("회원가입 실패:", error.response || error);
+      let errorMessage = "회원가입 중 오류가 발생했습니다.";
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        const errorKeys = ['detail', 'error', 'message', 'username'];
+        for (const key of errorKeys) {
+          if (errorData[key]) {
+            errorMessage = Array.isArray(errorData[key]) ? errorData[key][0] : errorData[key];
+            break;
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setErr(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const Eye = () => (
@@ -44,8 +88,7 @@ export default function SignUpPage() {
   return (
     <section className="signup">
       <div className="signup__hero">건너건너</div>
-
-      <form className="signup__form" onSubmit={goLocation}>
+      <form className="signup__form" onSubmit={handleSubmit}>
         <label className="signup__label">ID</label>
         <input
           className="signup__input"
@@ -54,7 +97,6 @@ export default function SignUpPage() {
           onChange={(e) => setId(e.target.value)}
           autoComplete="username"
         />
-
         <label className="signup__label" style={{ marginTop: 20 }}>PassWord</label>
         <div className="signup__pwdwrap">
           <input
@@ -74,7 +116,6 @@ export default function SignUpPage() {
             <Eye />
           </button>
         </div>
-
         <label className="signup__label" style={{ marginTop: 20 }}>Confirm</label>
         <div className="signup__pwdwrap">
           <input
@@ -94,13 +135,10 @@ export default function SignUpPage() {
             <Eye />
           </button>
         </div>
-
         {err && <div className="signup__error">{err}</div>}
-
-        <button className="signup__submit" type="submit">
-          장소 설정하러 가기
+        <button className="signup__submit" type="submit" disabled={loading}>
+          {loading ? "가입 중..." : "장소 설정하러 가기"}
         </button>
-
         <div className="signup__login">
           이미 계정이 있다면&nbsp;<Link to="/login">Login</Link>
         </div>
