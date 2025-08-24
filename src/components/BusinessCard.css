@@ -72,4 +72,17 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 18px rgba(0,0,0,.12);
 }
-
+.right-side {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #E5E7EB;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+}
