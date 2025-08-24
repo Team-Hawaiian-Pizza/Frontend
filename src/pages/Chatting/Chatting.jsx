@@ -15,11 +15,8 @@ const ChattingPage = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [newRoomTarget, setNewRoomTarget] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingUser, setTypingUser] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const selectedChatRef = useRef(null);
@@ -29,82 +26,9 @@ const ChattingPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-
-  // 타이핑 상태 전송
-  const sendTypingStatus = async (typing) => {
-    if (!selectedChat) return;
-    
-    const currentUsername = localStorage.getItem('username');
-    
-    // 웹소켓이 연결되어 있으면 웹소켓으로 전송
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'typing',
-        user_id: currentUsername,
-        is_typing: typing
-      }));
-      return;
-    }
-    
-    // 웹소켓이 없으면 HTTP API로 전송 (백엔드에서 지원하는 경우)
-    try {
-      await chatApi.post(`/conversations/${selectedChat.id}/typing/`, {
-        user_id: currentUsername,
-        is_typing: typing
-      });
-    } catch (error) {
-      // 타이핑 상태 전송 실패는 치명적이지 않으므로 조용히 무시
-      console.log('타이핑 상태 전송 실패:', error);
-    }
-  };
-
-  // 타이핑 상태 확인 (폴링)
-  const checkTypingStatus = async () => {
-    if (!selectedChat) return;
-    try {
-      const response = await chatApi.get(`/conversations/${selectedChat.id}/typing/`);
-      const typingData = response.data;
-      const currentUsername = localStorage.getItem('username');
-      
-      // 자신이 아닌 사용자가 타이핑 중인지 확인
-      const otherUserTyping = typingData.find(t => t.user_id !== currentUsername && t.is_typing);
-      
-      if (otherUserTyping) {
-        setIsTyping(true);
-        setTypingUser(otherUserTyping.user_id);
-      } else {
-        setIsTyping(false);
-        setTypingUser('');
-      }
-    } catch (error) {
-      console.log('타이핑 상태 확인 실패:', error);
-    }
-  };
-
-  // 정기적으로 타이핑 상태 확인 (3초마다)
-  useEffect(() => {
-    if (!selectedChat) return;
-    
-    const interval = setInterval(checkTypingStatus, 3000);
-    return () => clearInterval(interval);
-  }, [selectedChat]);
-
   // 입력 핸들러
   const handleInputChange = (e) => {
     setInput(e.target.value);
-    
-    // 타이핑 시작 알림
-    sendTypingStatus(true);
-    
-    // 기존 타이머 클리어
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    // 1초 후 타이핑 중지 알림
-    typingTimeoutRef.current = setTimeout(() => {
-      sendTypingStatus(false);
-    }, 1000);
   };
 
   // 키다운 핸들러 (한글 조합 중복 방지)
@@ -117,8 +41,7 @@ const ChattingPage = () => {
   // 웹소켓 연결
   const connectWebSocket = (conversationId) => {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//15.165.220.74:8000/ws/chat/${conversationId}/`;
+      const wsUrl = `ws://localhost:8001/ws/chat/${conversationId}/`;
       
       wsRef.current = new WebSocket(wsUrl);
       
@@ -172,15 +95,6 @@ const ChattingPage = () => {
             const old = prev[conversationId] || [];
             return { ...prev, [conversationId]: [...old, newMessage] };
           });
-        }
-        break;
-        
-      case 'typing_status':
-        // 타이핑 상태 표시
-        const currentUsername = localStorage.getItem('username');
-        if (data.user_id !== currentUsername) {
-          setIsTyping(data.is_typing);
-          setTypingUser(data.user_id);
         }
         break;
     }
@@ -351,9 +265,6 @@ const ChattingPage = () => {
         wsRef.current.close();
       }
       stopMessagePolling();
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -365,12 +276,6 @@ const ChattingPage = () => {
     const currentUsername = localStorage.getItem('username');
 
     setInput('');
-    
-    // 타이핑 상태 중지
-    sendTypingStatus(false);
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
 
     // 웹소켓이 연결되어 있으면 웹소켓으로 전송
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -513,16 +418,6 @@ const ChattingPage = () => {
                 {message.isMe && <div className="chat-avatar-small"></div>}
               </div>
             ))}
-            {isTyping && (
-              <div className="typing-indicator" style={{ 
-                padding: '10px', 
-                fontStyle: 'italic', 
-                color: '#666',
-                fontSize: '14px'
-              }}>
-                {typingUser}님이 입력 중입니다...
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
 
