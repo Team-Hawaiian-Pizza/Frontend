@@ -1,74 +1,68 @@
-/* EntryPage.css — 파란 버튼 버전 */
-.entry {
-  display: grid;
-  place-items: center;
-  padding: 32px 16px;
+/* Entry – 로그인 화면 톤과 동일 */
+
+.entry { padding: 0 16px 48px; }
+
+/* 상단 파란 헤더 */
+.entry__hero{
+  height: 96px;
+  display: grid; place-items: center;
+  background: #f7f9ff;
+  color: #4361EE;
+  font-weight: 900; font-size: 36px;
+  margin: 0 -16px 32px;
+  border-bottom: 1px solid rgba(67,97,238,.12);
+  box-shadow: 0 10px 30px rgba(67,97,238,.08);
 }
 
-.entry__card {
-  width: min(680px, 92vw);
-  background: #e6e6e6;
-  border-radius: 16px;
-  padding: 28px 20px;
-  text-align: center;
-}
-
-/* 로고 박스 */
-.entry__logo {
-  width: 100%;
-  height: 160px;
-  background: #fff;
-  border: 1px solid #e7e9ee;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-size: 40px;
-  font-weight: 800;
-  color: #555;
-  margin: 0 auto 20px;
-}
-
-.entry__slogan {
-  font-size: 24px;
-  color: #111;
-  margin: 8px 0 20px;
-}
-
-.entry__actions {
-  display: grid;
-  gap: 12px;
-  width: min(560px, 92%);
+/* 중앙 배치 */
+.entry__main{
+  max-width: 760px;
   margin: 0 auto;
+  text-align: center;
+  padding-top: 8px;
 }
 
-/* ==== 버튼: 파란색 기본 ==== */
-:root{
-  --blue-500: #4361EE;
-  --blue-600: #3651d6;
-  --blue-700: #2f45be;
-  --blue-50:  #eff3ff;
+/* 슬로건 */
+.entry__slogan{
+  margin: 100 100 400px;
+  font-size: 50px; font-weight: 900; color: #111; line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+.entry__slogan > span{
+  display: block;
+  margin-top: 10px;
+  font-size: 18px; font-weight: 600; color: #6b7280;
 }
 
-.entry__btn {
-  height: 52px;
-  border-radius: 18px;
-  font-size: 16px;
-  border: 1px solid var(--blue-500);
-  background: var(--blue-500);
-  color: #fff;
-  cursor: pointer;
-  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+/* 액션 영역 */
+.entry__actions{
+  width: min(560px, 92vw);
+  margin: 0 auto;
+  display: grid; gap: 12px;
 }
-.entry__btn:hover    { background: var(--blue-600); border-color: var(--blue-600); }
-.entry__btn:active   { background: var(--blue-700); border-color: var(--blue-700); }
-.entry__btn:focus-visible { outline: 3px solid rgba(67,97,238,.35); outline-offset: 2px; }
-.entry__btn:disabled { opacity: .6; cursor: not-allowed; }
 
-/* 보조 버튼(아웃라인) */
-.entry__btn--ghost {
-  background: #fff;
-  color: var(--blue-500);
-  border-color: var(--blue-500);
+/* 버튼 스타일 (로그인 화면과 동일) */
+.entry__btn{
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 56px; border-radius: 999px; font-size: 18px; font-weight: 700;
+  border: 1px solid transparent; text-decoration: none; cursor: pointer;
 }
-.entry__btn--ghost:hover { background: var(--blue-50); }
 
+.entry__btn--primary{
+  background: #4361EE; border-color: #4361EE; color: #fff;
+  transition: background .15s ease, border-color .15s ease;
+}
+.entry__btn--primary:hover{ background:#3651d6; border-color:#3651d6; }
+.entry__btn--primary:active{ background:#2f45be; border-color:#2f45be; }
+
+.entry__btn--ghost{
+  background:#fff; color:#4361EE; border-color:#4361EE;
+}
+.entry__btn--ghost:hover{ background:#eff3ff; }
+
+
+/* 반응형 */
+@media (max-width: 768px){
+  .entry__slogan{ font-size: 30px; }
+  .entry__slogan > span{ font-size: 16px; }
+}
