@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ForceGraph2D from "react-force-graph-2d";
+import api from "../../api/axios";
 import "../../styles/Mainpage.css";
 
 /* === 스크롤 진입 시 나타나는 공통 래퍼 === */
@@ -48,15 +49,29 @@ export default function Mainpage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [regionText, setRegionText] = useState("사용자의 지역: 미설정");
+  const [currentUser, setCurrentUser] = useState(null);
   const fgRef = useRef(null);
   const canvasRef = useRef(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
 
-  // 지역 배지 표기
+  // 사용자 정보 및 지역 로드
   useEffect(() => {
-    const sido = localStorage.getItem("region_sido") || "";
-    const sigungu = localStorage.getItem("region_sigungu") || "";
-    if (sido && sigungu) setRegionText(`사용자의 지역: ${sido} ${sigungu}`);
+    const loadUserData = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        const response = await api.get(`/users/profiles/${userId}`);
+        const userData = response.data;
+        setCurrentUser(userData);
+        setRegionText(`사용자의 지역: ${userData.province_name} ${userData.city_name}`);
+      } catch (error) {
+        console.error('사용자 정보 로드 실패:', error);
+        const sido = localStorage.getItem("region_sido") || "";
+        const sigungu = localStorage.getItem("region_sigungu") || "";
+        if (sido && sigungu) setRegionText(`사용자의 지역: ${sido} ${sigungu}`);
+      }
+    };
+    
+    loadUserData();
   }, []);
 
   // 캔버스 영역 크기에 맞춰 그래프 리사이즈
@@ -80,35 +95,69 @@ export default function Mainpage() {
 
   return () => ro.disconnect();
 }, []);
-  // 더미 데이터
+  // 실제 사용자 데이터로 네트워크 구성
   useEffect(() => {
-    const names = ["나","정훈","태은","서연","부경","윤식","준희","도형","솔태","민철","진"];
-    const nodes = names.map((name, i) => ({
-      id: name,
-      name,
-      ...(i === 0 ? { fx: 0, fy: 0 } : {}), // '나' 중앙 고정
-    }));
-    const links = nodes.slice(1).map(f => ({ source: "나", target: f.id }));
+    const buildNetworkData = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const response = await api.get('/users/all');
+        const allUsers = response.data.results;
+        const currentUserId = parseInt(localStorage.getItem('user_id'));
+        
+        // 로그인한 사용자를 중앙에, 다른 사용자들을 주변에 배치
+        const me = { 
+          id: currentUser.name, 
+          name: currentUser.name, 
+          fx: 0, 
+          fy: 0 // 중앙 고정
+        };
+        
+        // 다른 사용자들 (최대 10명)
+        const others = allUsers
+          .filter(user => user.id !== currentUserId)
+          .slice(0, 10)
+          .map(user => ({
+            id: user.name,
+            name: user.name
+          }));
+          
+        const nodes = [me, ...others];
+        
+        // 모든 다른 사용자를 '나'와 연결
+        const links = others.map(user => ({ 
+          source: currentUser.name, 
+          target: user.name 
+        }));
 
-    const CONNECTION_PROB = 0.18, MAX_EXTRA_LINKS = 5;
-    const seen = new Set(links.map(l => [l.source, l.target].sort().join("|")));
-    let extras = 0;
-    for (let i = 1; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        if (extras >= MAX_EXTRA_LINKS) break;
-        if (Math.random() < CONNECTION_PROB) {
-          const key = [nodes[i].id, nodes[j].id].sort().join("|");
-          if (!seen.has(key)) {
-            seen.add(key);
-            links.push({ source: nodes[i].id, target: nodes[j].id });
-            extras++;
+        // 사용자들 간 랜덤 연결 추가
+        const CONNECTION_PROB = 0.15, MAX_EXTRA_LINKS = 5;
+        const seen = new Set(links.map(l => [l.source, l.target].sort().join("|")));
+        let extras = 0;
+        
+        for (let i = 1; i < nodes.length && extras < MAX_EXTRA_LINKS; i++) {
+          for (let j = i + 1; j < nodes.length && extras < MAX_EXTRA_LINKS; j++) {
+            if (Math.random() < CONNECTION_PROB) {
+              const key = [nodes[i].name, nodes[j].name].sort().join("|");
+              if (!seen.has(key)) {
+                seen.add(key);
+                links.push({ source: nodes[i].name, target: nodes[j].name });
+                extras++;
+              }
+            }
           }
         }
+        
+        setGraphData({ nodes, links });
+      } catch (error) {
+        console.error('네트워크 데이터 로드 실패:', error);
+        // 실패 시 빈 데이터
+        setGraphData({ nodes: [], links: [] });
       }
-      if (extras >= MAX_EXTRA_LINKS) break;
-    }
-    setGraphData({ nodes, links });
-  }, []);
+    };
+    
+    buildNetworkData();
+  }, [currentUser]);
 
   // 컨테이너 크기에 맞춰 force 스케일 + 초기 중앙
   useEffect(() => {
@@ -119,14 +168,17 @@ export default function Mainpage() {
     fgRef.current.centerAt(0, 0, 0);
   }, [graphData, dims]);
 
-  // '나'는 항상 고정
+  // 로그인한 사용자는 항상 고정
   const keepMePinned = (node) => {
-    if (node.id === "나") { node.fx = 0; node.fy = 0; }
+    if (currentUser && node.id === currentUser.name) { 
+      node.fx = 0; 
+      node.fy = 0; 
+    }
   };
 
   // 노드 렌더
   const drawNode = (node, ctx, globalScale) => {
-    const isMe = node.id === "나";
+    const isMe = currentUser && node.id === currentUser.name;
     const radius = isMe ? 18 : 12;
 
     ctx.beginPath();
@@ -147,12 +199,41 @@ export default function Mainpage() {
     ctx.fillText(node.name, node.x, node.y);
   };
 
-  const recs = [
-    { id: 1, icon: "☕️", title: "솔태님의 친구 가게", desc: "추가로 커피 쿠폰 받으세요!" },
-    { id: 2, icon: "🧰", title: "진님의 친구 에어컨 수리", desc: "지금 요청하면 10% 할인!" },
-    { id: 3, icon: "🍜", title: "정훈님의 단골 라멘집", desc: "점심 사이드 1+1" },
-    { id: 4, icon: "🎟️", title: "부경님의 영화관 제휴", desc: "주말 예매 2천원 할인" },
-  ];
+  // 실제 브랜드 데이터 기반 추천
+  const [recs, setRecs] = useState([]);
+  
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      try {
+        const response = await api.get('/rewards/brands');
+        const brands = response.data;
+        
+        // 브랜드 데이터를 추천 형태로 변환
+        const brandsArray = Array.isArray(brands) ? brands : (brands.data || []);
+        const recommendations = brandsArray.slice(0, 4).map((brand, index) => {
+          const icons = ["☕️", "🧰", "🍜", "🎟️"];
+          const friends = ["김민준", "이서연", "박지후", "최예준"];
+          
+          return {
+            id: brand.id,
+            icon: icons[index] || "🏪",
+            title: `${friends[index] || "친구"}님 추천 ${brand.name}`,
+            desc: brand.benefit
+          };
+        });
+        
+        setRecs(recommendations);
+      } catch (error) {
+        console.error('추천 데이터 로드 실패:', error);
+        // 실패 시 기본 추천
+        setRecs([
+          { id: 1, icon: "☕️", title: "친구 추천 커피숍", desc: "맛있는 커피를 즐겨보세요!" }
+        ]);
+      }
+    };
+    
+    loadRecommendations();
+  }, []);
 
   return (
     <main className="main-page">
