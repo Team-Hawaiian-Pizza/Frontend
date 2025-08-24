@@ -23,12 +23,12 @@ const FOF = [
 ];
 
 const RELATIONSHIPS = [
-    { friendId: 1, fofId: 101 }, 
-    { friendId: 1, fofId: 102 }, 
-    { friendId: 1, fofId: 103 }, 
-    { friendId: 2, fofId: 104 }, 
-    { friendId: 3, fofId: 105 }, 
-    { friendId: 3, fofId: 106 }, 
+    { friendId: 1, fofId: 101 },
+    { friendId: 1, fofId: 102 }, 
+    { friendId: 1, fofId: 103 }, 
+    { friendId: 2, fofId: 104 }, 
+    { friendId: 3, fofId: 105 }, 
+    { friendId: 3, fofId: 106 }, 
 ];
 
 const Search = () => {
@@ -70,13 +70,13 @@ const Search = () => {
 
 
  return (
-    <div className='searchpage'>
-      <form className='search-bar' onSubmit={onSubmit}>
-        <input className='search-input'
-          placeholder="필요한 명함을 검색하세요"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          >
+  <div className='searchpage'>
+      <form className='search-bar' onSubmit={onSubmit}>
+        <input className='search-input'
+          placeholder="필요한 명함을 검색하세요"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        >
         </input>
         <button className='search-btn'>검색</button>
       </form>
