@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getMyCode } from '../../api';
 import './Connections.css';
 
 // 더미 데이터
-const myCode = "ABCD-1234";
 const pendingRequests = [
     { id: 1, name: "인덕이", introducer: "김인하님의 친구" },
     { id: 2, name: "홍길동", introducer: "김인하님의 친구" },
@@ -10,6 +10,23 @@ const pendingRequests = [
 
 const ConnectionsPage = () => {
     const [addCode, setAddCode] = useState('');
+    const [myCode, setMyCode] = useState(null);
+
+    useEffect(() => {
+        const fetchMyCode = async () => {
+            try {
+                const data = await getMyCode();
+                setMyCode(data.code); // 응답 객체에서 'code' 키의 값을 상태에 저장
+            } catch (err) {
+                console.error("코드 불러오기 실패:", err);
+                setCodeError("내 코드를 불러오는 데 실패했습니다.");
+            } finally {
+                setCodeLoading(false);
+            }
+        };
+
+        fetchMyCode();
+    }, []); 
 
     const handleAddFriend = (e) => {
         e.preventDefault();

@@ -1,104 +1,183 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getUserProfile } from '../../api';
+import api from '../../api/axios';
 import './Detail.css';
-
-// 임시 친구의 친구 데이터
-const FOF = [
-  {id: 101, name: '인덕이', img: '/friend-1.jpg', phone:'010-1234-5678', email:'induk@naver.com', address: '서울시 강서구', approved: false,
-   description: '에어컨 필터 청소 전문\n리모델링 후 적극 추천', tags: ['#에어컨', '#필터청소'],
-   reviews: ['에어컨 필터 청소를 기가 막히게 해주고 가셨습니다.'], mannerTemp: 85},
-  {id: 102, name: '홍길동', img: '/friend-1.jpg', phone:'010-2345-6789', email: 'hong@naver.com', address: '서울시 양천구', approved: false,
-   description: '가구 제작 및 수리', tags: ['#가구', '#수리'],
-   reviews: ['낡은 책장을 새것처럼 고쳐주셨어요!'], mannerTemp: 72},
-  {id: 103, name: '채부경', img: '/friend-1.jpg', phone: '010-3456-7890', email: 'chae@naver.com', address: '서울시 구로구', approved: true,
-   description: '집안 인테리어 상담', tags: ['#인테리어', '#상담'],
-   reviews: ['친절하고 꼼꼼하게 상담해주셔서 좋았습니다.'], mannerTemp: 95},
-  {id: 104, name: '박준희', img: '/friend-1.jpg', phone: '010-4567-8901', email: 'park@naver.com', address: '서울시 영등포구', approved: false,
-   description: '타일 시공 및 보수 전문가', tags: ['#타일', '#보수'],
-   reviews: ['화장실 타일 교체 맡겼는데 정말 깔끔하게 해주셨어요.'], mannerTemp: 68},
-  {id: 105, name: '강태은', img: '/friend-1.jpg', phone: '010-5678-9012', email: 'kang@naver.com', address: '서울시 금천구', approved: false,
-   description: '조명 설치 및 디자인', tags: ['#조명', '#디자인'],
-   reviews: ['분위기 좋은 조명으로 바꿔주셔서 감사합니다.'], mannerTemp: 78},
-  {id: 106, name: '꼬깔콘', img: '/friend-1.jpg', phone: '010-6789-0123', email: 'coco@naver.com', address: '서울시 동작구', approved: false,
-   description: '누수 탐지 및 배관 수리', tags: ['#누수', '#배관'],
-   reviews: ['신속하게 누수 지점을 찾아 해결해주셨습니다.'], mannerTemp: 81}
-];
 
 const DetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const profile = FOF.find(f => f.id === Number(id));
 
-  if (!profile) {
-    return <div className="detail-page-not-found">명함을 찾을 수 없습니다.</div>;
-  }
+  const [profile, setProfile] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false); // 후기 로딩 상태
+  const [loading, setLoading] = useState(true);                // 프로필 로딩 상태
+  const [error, setError] = useState(null);
+  const [mannerTemp, setMannerTemp] = useState(0);
 
-  // 1대1 채팅하기: chatting 페이지로 이동
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getUserProfile(id);
+        if (!alive) return;
+
+        setProfile(data);
+        setMannerTemp(
+          typeof data?.manner_temperature === 'number'
+            ? data.manner_temperature
+            : Number(data?.manner_temperature) || 0
+        );
+
+        // 후기: 프로필 응답에 있으면 사용, 없으면 보조 API 호출
+        if (Array.isArray(data?.reviews)) {
+          setReviews(data.reviews);
+        } else {
+          setReviewsLoading(true);
+          try {
+            const res = await api.get(`/users/profiles/${id}/reviews`);
+            const arr = Array.isArray(res?.data?.results)
+              ? res.data.results
+              : (Array.isArray(res?.data) ? res.data : []);
+            if (alive) setReviews(arr);
+          } catch {
+            if (alive) setReviews([]); // 없거나 에러면 빈 배열
+          } finally {
+            if (alive) setReviewsLoading(false);
+          }
+        }
+      } catch (e) {
+        setError('명함 정보를 불러오지 못했습니다.');
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [id]);
+
+  if (loading) return <div className="detail-page-status">불러오는 중…</div>;
+  if (error)   return <div className="detail-page-status">{error}</div>;
+  if (!profile) return <div className="detail-page-not-found">명함을 찾을 수 없습니다.</div>;
+
+  // 서버 응답에서 필드 매핑
+  const name = profile.display_name || profile.korean_name || profile.name || '이름 비공개';
+  const avatar = profile.avatar_url || '/friend-1.jpg';
+  const address = [profile.province_name, profile.city_name].filter(Boolean).join(' ');
+  const connection = profile.connection_status; // 'CONNECTED' | 'NONE' | 'PENDING'
+
+  // 연락처: 본인일 때만 email/phone이 온다고 가정. 없으면 masked_* 사용
+  const displayEmail = profile.email ?? profile.masked_email ?? '이메일 비공개';
+  const displayPhone = profile.phone ?? profile.masked_phone ?? '전화번호 비공개';
+
+  // 블러 여부: 연결 안된 타인이면 블러
+  const shouldBlur = !profile.email && !profile.phone;
+
+  // 이동/액션
   const handleChat = () => {
-    navigate(`/chat/${profile.id}?name=${encodeURIComponent(profile.name)}`); // /chatting 경로로 이동
+    navigate(`/chat/${profile.id}?name=${encodeURIComponent(name)}`);
   };
-
-  // 코드 요청하기: 명함 주인에게 코드 요청
   const handleCodeRequest = () => {
-    console.log(`${profile.name}에게 코드 요청을 보냈습니다.`);
-    alert(`${profile.name}님에게 코드 요청을 보냈습니다.`);
+    console.log(`${name}에게 코드 요청을 보냈습니다.`);
+    alert(`${name}님에게 코드 요청을 보냈습니다.`);
   };
 
   return (
     <div className="detail-page">
       <div className="detail-container">
+        {/* 왼쪽: 명함 */}
         <div className="detail-left">
           <div className="detail-card">
             <div className="detail-avatar">
-              <img src={profile.img} alt={profile.name} />
+              <img src={avatar} alt={name} />
             </div>
-            <div className="detail-name">{profile.name}</div>
-            
-            <div className={`detail-info ${!profile.approved ? 'blurred' : ''}`}>
-              <span>{profile.phone}</span>
-              <span>{profile.email}</span>
-              <span>{profile.address}</span>
+            <div className="detail-name">{name}</div>
+
+            <div className={`detail-info ${shouldBlur ? 'blurred' : ''}`}>
+              <span>{displayPhone}</span>
+              <span>{displayEmail}</span>
+              <span>{address || '주소 비공개'}</span>
             </div>
           </div>
+
           <div className="detail-buttons">
             <button className="detail-button" onClick={handleChat}>1대1 채팅하기</button>
-            <button className="detail-button" onClick={handleCodeRequest}>코드 요청하기</button>
+            <button className="detail-button" onClick={handleCodeRequest}>
+              {connection === 'PENDING' ? '요청 대기중' : '코드 요청하기'}
+            </button>
           </div>
         </div>
-        
+
+        {/* 오른쪽: 추가 정보 */}
         <div className="detail-right">
+          {/* 추가 설명: intro + tags */}
           <div className="detail-section">
             <h3>추가 설명</h3>
-            {profile.description.split('\n').map((line, index) => (
-              <p key={index}>{line}</p>
-            ))}
-            <div className="detail-tags">
-              {profile.tags.map(tag => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
-          </div>
-          
-          {/* 후기 */}
-          <div className="detail-section">
-            <h3>후기</h3>
-            {profile.reviews.length > 0 ? (
-              profile.reviews.map((review, index) => (
-                <p key={index}>{review}</p>
-              ))
-            ) : (
-              <p>아직 등록된 후기가 없습니다.</p>
+            <p>{profile.intro || '소개가 없습니다.'}</p>
+
+            {Array.isArray(profile.tags) && profile.tags.length > 0 && (
+              <div className="tag-list">
+                {profile.tags.map((t, i) => (
+                  <span key={i} className="tag-chip">#{t}</span>
+                ))}
+              </div>
             )}
           </div>
-          
+
+          {/* 후기: 텍스트만 표시 (별 아이콘 없음) */}
+          <div className="detail-section">
+            <h3>후기</h3>
+            {reviewsLoading ? (
+              <p>후기를 불러오는 중…</p>
+            ) : reviews.length === 0 ? (
+              <p>아직 등록된 후기가 없습니다.</p>
+            ) : (
+              <ul className="review-list">
+                {reviews.map((r, idx) => {
+                  const rating = r.rating ?? r.score;
+                  return (
+                    <li key={r.id ?? `${idx}-${r.author_name ?? 'anon'}`} className="review-item">
+                      <div className="review-head">
+                        <strong className="review-author">{r.author_name ?? '익명'}</strong>
+                        {typeof rating !== 'undefined' && (
+                          <span className="review-rating" style={{ marginLeft: 8 }}>
+                            평점 {Number(rating)}
+                          </span>
+                        )}
+                        {r.created_at && (
+                          <span className="review-date" style={{ marginLeft: 8 }}>
+                            {String(r.created_at).slice(0, 10)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="review-body">{r.content ?? r.comment ?? ''}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
           {/* 매너 온도 */}
           <div className="detail-section">
             <h3>매너 온도</h3>
             <div className="detail-manner">
-              <div className="manner-bar-container">
-                <div className="manner-bar" style={{ width: `${profile.mannerTemp}%` }}></div>
+              <div
+                className="manner-bar-container"
+                style={{ width: 200, height: 10, background: '#eee', borderRadius: 999, overflow: 'hidden' }}
+              >
+                <div
+                  className="manner-bar"
+                  style={{
+                    width: `${Number(mannerTemp ?? 0)}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #86b6ff 0%, #286ef0 100%)',
+                    borderRadius: 999,
+                    transition: 'width 0.3s ease',
+                  }}
+                />
               </div>
-              <span>{profile.mannerTemp}℃</span>
+              <span style={{ marginLeft: 8 }}>{Number(mannerTemp ?? 0)}℃</span>
             </div>
           </div>
         </div>
