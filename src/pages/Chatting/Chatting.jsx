@@ -22,6 +22,7 @@ const ChattingPage = () => {
   const typingTimeoutRef = useRef(null);
   const wsRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const selectedChatRef = useRef(null);
 
   // 자동 스크롤 함수
   const scrollToBottom = () => {
@@ -192,8 +193,10 @@ const ChattingPage = () => {
     }
     
     pollingIntervalRef.current = setInterval(async () => {
-      if (selectedChat && !isConnected) {
-        await loadMessages(selectedChat.id);
+      const currentChat = selectedChatRef.current;
+      if (currentChat) {
+        console.log('폴링 중... 채팅방:', currentChat.name);
+        await loadMessages(currentChat.id);
       }
     }, 3000);
   };
@@ -304,6 +307,7 @@ const ChattingPage = () => {
     stopMessagePolling();
     
     setSelectedChat(chat);
+    selectedChatRef.current = chat;
     
     // 메시지 로드
     if (!threads[chat.id]) {
@@ -313,13 +317,14 @@ const ChattingPage = () => {
     // 웹소켓 연결 시도
     connectWebSocket(chat.id);
     
-    // 웹소켓 연결이 안되면 폴링 시작
-    setTimeout(() => {
-      if (!isConnected) {
-        startMessagePolling();
-      }
-    }, 2000);
+    // 항상 폴링 시작 (웹소켓 백업용)
+    startMessagePolling();
   };
+
+  // selectedChat 변경 시 ref 업데이트
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
   // 선택된 채팅이 변경될 때 메시지 로드
   useEffect(() => {
@@ -496,7 +501,7 @@ const ChattingPage = () => {
               backgroundColor: isConnected ? '#28a745' : '#dc3545',
               color: 'white'
             }}>
-              {isConnected ? '실시간' : 'HTTP 모드'}
+              {isConnected ? '연결됨' : '연결안됨'}
             </span>
           </div>
 
