@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import chatApi from '../../api/chatApi';
 import './Chatting.css';
@@ -15,6 +15,87 @@ const ChattingPage = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [newRoomTarget, setNewRoomTarget] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState('');
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  // 자동 스크롤 함수
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+
+  // 타이핑 상태 전송
+  const sendTypingStatus = async (typing) => {
+    if (!selectedChat) return;
+    try {
+      const currentUsername = localStorage.getItem('username');
+      await chatApi.post(`/conversations/${selectedChat.id}/typing/`, {
+        user_id: currentUsername,
+        is_typing: typing
+      });
+    } catch (error) {
+      // 타이핑 상태 전송 실패는 치명적이지 않으므로 조용히 무시
+      console.log('타이핑 상태 전송 실패:', error);
+    }
+  };
+
+  // 타이핑 상태 확인 (폴링)
+  const checkTypingStatus = async () => {
+    if (!selectedChat) return;
+    try {
+      const response = await chatApi.get(`/conversations/${selectedChat.id}/typing/`);
+      const typingData = response.data;
+      const currentUsername = localStorage.getItem('username');
+      
+      // 자신이 아닌 사용자가 타이핑 중인지 확인
+      const otherUserTyping = typingData.find(t => t.user_id !== currentUsername && t.is_typing);
+      
+      if (otherUserTyping) {
+        setIsTyping(true);
+        setTypingUser(otherUserTyping.user_id);
+      } else {
+        setIsTyping(false);
+        setTypingUser('');
+      }
+    } catch (error) {
+      console.log('타이핑 상태 확인 실패:', error);
+    }
+  };
+
+  // 정기적으로 타이핑 상태 확인 (3초마다)
+  useEffect(() => {
+    if (!selectedChat) return;
+    
+    const interval = setInterval(checkTypingStatus, 3000);
+    return () => clearInterval(interval);
+  }, [selectedChat]);
+
+  // 입력 핸들러
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    
+    // 타이핑 시작 알림
+    sendTypingStatus(true);
+    
+    // 기존 타이머 클리어
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // 1초 후 타이핑 중지 알림
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingStatus(false);
+    }, 1000);
+  };
+
+  // 키다운 핸들러 (한글 조합 중복 방지)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+      handleSend();
+    }
+  };
 
   // 채팅 목록 로드
   const loadChatList = async () => {
@@ -126,6 +207,11 @@ const ChattingPage = () => {
     return threads[selectedChat.id] || [];
   }, [threads, selectedChat]);
 
+  // 메시지가 변경될 때마다 스크롤
+  useEffect(() => {
+    scrollToBottom();
+  }, [currentMessages]);
+
   // 메시지 전송
   const handleSend = async () => {
     if (!selectedChat || !input.trim()) return;
@@ -133,30 +219,33 @@ const ChattingPage = () => {
     const text = input.trim();
     const currentUsername = localStorage.getItem('username');
 
-    // 즉시 UI 업데이트 (낙관적 업데이트)
-    const tempMessage = { 
-      id: Date.now(), 
-      sender: currentUsername, 
-      text, 
-      isMe: true 
-    };
-    
-    setThreads(prev => {
-      const old = prev[conversationId] || [];
-      return { ...prev, [conversationId]: [...old, tempMessage] };
-    });
-    
     setInput('');
+    
+    // 타이핑 상태 중지
+    sendTypingStatus(false);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
 
     try {
-      await chatApi.post(`/conversations/${conversationId}/messages/send/`, {
+      const response = await chatApi.post(`/conversations/${conversationId}/messages/send/`, {
         sender_id: currentUsername,
         content: text,
         message_type: 'text'
       });
       
-      // 메시지 전송 성공 후 최신 메시지 다시 로드
-      await loadMessages(conversationId);
+      // 전송된 메시지를 직접 threads에 추가
+      const newMessage = {
+        id: response.data.id,
+        sender: response.data.sender_id,
+        text: response.data.content,
+        isMe: response.data.sender_id === currentUsername
+      };
+      
+      setThreads(prev => {
+        const old = prev[conversationId] || [];
+        return { ...prev, [conversationId]: [...old, newMessage] };
+      });
       
       // 채팅 목록의 마지막 메시지 날짜 업데이트
       setChatList(prev =>
@@ -167,11 +256,6 @@ const ChattingPage = () => {
       );
     } catch (error) {
       console.error('메시지 전송 실패:', error);
-      // 실패 시 UI에서 임시 메시지 제거
-      setThreads(prev => {
-        const old = prev[conversationId] || [];
-        return { ...prev, [conversationId]: old.filter(msg => msg.id !== tempMessage.id) };
-      });
       alert('메시지 전송에 실패했습니다.');
     }
   };
@@ -248,6 +332,17 @@ const ChattingPage = () => {
                 {message.isMe && <div className="chat-avatar-small"></div>}
               </div>
             ))}
+            {isTyping && (
+              <div className="typing-indicator" style={{ 
+                padding: '10px', 
+                fontStyle: 'italic', 
+                color: '#666',
+                fontSize: '14px'
+              }}>
+                {typingUser}님이 입력 중입니다...
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="chat-input-area">
@@ -255,8 +350,8 @@ const ChattingPage = () => {
               type="text"
               placeholder="내용을 입력하세요"
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
             />
             <button onClick={handleSend}>전송</button>
           </div>
