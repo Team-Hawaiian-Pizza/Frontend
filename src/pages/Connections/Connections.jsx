@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getMyCode } from '../../api';
-import api from '../../api/axios';
+import { getMyCode, getRequests, enterFriendCode, acceptRequest, rejectRequest } from '../../api';
 import './Connections.css';
 
 const getMyUserId = () =>
@@ -31,12 +30,10 @@ const ConnectionsPage = () => {
       setMyCodeLoading(false);
     }
 
-    // 2) 받은 요청 목록 (❗️user_id 반드시 첨부)
-    try {
-      setRequestsLoading(true);
-      const res = await api.get('/connections/requests', {
-        params: { user_id: userId },
-      });
+    // 2) 받은 요청 목록
+     try {
+     setRequestsLoading(true);
+      const res = await getRequests();
       const arr =
         Array.isArray(res?.data?.data) ? res.data.data
         : Array.isArray(res?.data?.results) ? res.data.results
@@ -64,25 +61,12 @@ const ConnectionsPage = () => {
     }
 
     try {
-      const userId = getMyUserId();
-      const response = await api.post(
-        '/connections/enter-code',
-        { code: addCode },
-        { params: { user_id: userId } }
-      );
-
-      const d = response.data || {};
-      if (d.already_connected) {
-        alert('이미 친구 관계입니다.');
-      } else if (d.new) {
-        alert('친구 추가 요청을 성공적으로 보냈습니다.');
-      } else {
-        alert('처리되었습니다.');
-        await fetchData();
-      }
+      await enterFriendCode(addCode);
+      alert('친구 추가 요청을 성공적으로 보냈습니다.');
     } catch (err) {
       console.error('친구 추가 실패:', err);
-      alert('친구 추가 요청에 실패했습니다. 코드를 다시 확인해주세요.');
+      const errorMsg = err.response?.data?.detail || '친구 추가 요청에 실패했습니다. 코드를 다시 확인해주세요.';
+      alert(errorMsg);
     } finally {
       setAddCode('');
     }
@@ -95,6 +79,34 @@ const ConnectionsPage = () => {
       .then(() => alert('코드가 복사되었습니다.'))
       .catch((err) => console.error('클립보드 복사 실패:', err));
   };
+
+  const handleAccept = async (requestID) => {
+    try {
+      await acceptRequest(requestID);
+
+      setRequests(currentRequests =>
+        currentRequests.filter(req => req.id !==requestID)
+      );
+      alert('요청을 수락했습니다.');
+    } catch (err) {
+      console.error('요청 수락 실패:', err);
+      alert('요청 처리에 실패했습니다.');
+    }
+  };
+
+  const handleReject = async (requestID) => {
+    try {
+      await rejectRequest(requestID);
+      setRequests(currentRequests =>
+        currentRequests.filter(req => req.id !== requestID)
+      );
+      alert('요청을 거절했습니다.');
+    } catch (err) {
+      console.error('요청 거절 실패:', err);
+      alert('요청 처리에 실패했습니다.');
+    }
+  };
+
 
   return (
     <div className="connections-page">
@@ -127,7 +139,7 @@ const ConnectionsPage = () => {
 
         <div className="connections-right">
           <div className="connections-section">
-            <h3>코드 요청함</h3>
+            <h3>친구 추가 요청함</h3>
             <div className="request-list">
               {requestsLoading ? (
                 <p>요청 목록을 불러오는 중...</p>
@@ -148,6 +160,21 @@ const ConnectionsPage = () => {
                           ? `요청일: ${String(request.created_at).slice(0, 10)}`
                           : ''}
                       </div>
+                    </div>
+
+                    <div className='request-actions'>
+                          <button
+                            onClick={ () => handleAccept(request.id)}
+                            className='action-btn accept'
+                          >
+                            수락
+                          </button>
+                          <button
+                            onClick={()=>handleReject(request.id)}
+                            className='action-btn reject'
+                          >
+                            거절
+                          </button>
                     </div>
                   </div>
                 ))

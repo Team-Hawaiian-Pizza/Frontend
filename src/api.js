@@ -35,3 +35,17 @@ export const getRequests = () => {
     params: { user_id: myUserId },
   });
 };
+
+// 연결 요청 수락
+export const acceptRequest = (requestID) => {
+  return api.post(`/connections/accept/${requestID}`, {
+    user_id: getMyUserId(),
+  });
+};
+
+// 연결 요청 거절
+export const rejectRequest = (requestID) => {
+  return api.post(`/connections/reject/${requestID}`, {
+    user_id: getMyUserId(),
+  });
+};

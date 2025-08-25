@@ -167,6 +167,44 @@
   color: #6B7280;
 }
 
+/*수락 거절 버튼*/
+.request-item {
+  /* 버튼이 추가될 공간을 확보하기 위해 flex 속성 추가 */
+  justify-content: space-between;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0; /* 버튼이 줄어들지 않도록 설정 */
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.action-btn.accept {
+  background: #3B82F6;
+  color: white;
+}
+.action-btn.accept:hover {
+  background: #1D4ED8;
+}
+
+.action-btn.reject {
+  background: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+.action-btn.reject:hover {
+  background: #E5E7EB;
+}
 /* ── 애니메이션 ────────────────────────────────── */
 @keyframes fadeInUp {
   from {
