@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getUserProfile } from '../../api';
+import { getUserProfile,getMyConversations, createConversation } from '../../api';
 import api from '../../api/axios';
 import './Detail.css';
 
@@ -20,7 +20,7 @@ const DetailPage = () => {
     (async () => {
       try {
         setLoading(true);
-        const data = await getUserProfile(id);
+        const {data} = await getUserProfile(id);
         if (!alive) return;
 
         setProfile(data);
@@ -48,6 +48,7 @@ const DetailPage = () => {
           }
         }
       } catch (e) {
+        console.error('3. API 실패! 발생한 에러:', e.response || e.message || e);
         setError('명함 정보를 불러오지 못했습니다.');
       } finally {
         if (alive) setLoading(false);
@@ -61,7 +62,7 @@ const DetailPage = () => {
   if (!profile) return <div className="detail-page-not-found">명함을 찾을 수 없습니다.</div>;
 
   // 서버 응답에서 필드 매핑
-  const name = profile.display_name || profile.korean_name || profile.name || '이름 비공개';
+  const name =  profile.name || '이름 비공개';
   const avatar = profile.avatar_url || '/friend-1.jpg';
   const address = [profile.province_name, profile.city_name].filter(Boolean).join(' ');
   const connection = profile.connection_status; // 'CONNECTED' | 'NONE' | 'PENDING'
@@ -73,10 +74,50 @@ const DetailPage = () => {
   // 블러 여부: 연결 안된 타인이면 블러
   const shouldBlur = !profile.email && !profile.phone;
 
-  // 이동/액션
-  const handleChat = () => {
-    navigate(`/chat/${profile.id}?name=${encodeURIComponent(name)}`);
+  const handleChat = async () => {
+    if (!profile) return;
+
+    // profile 객체에 name이 있는지 확인
+    const otherUsername = profile.name;
+    if (!otherUsername) {
+      alert('상대방의 사용자 정보(name)가 없어 채팅을 시작할 수 없습니다.');
+      console.error('프로필 객체에 name 필드가 없습니다:', profile);
+      return;
+    }
+
+    const myUsername = localStorage.getItem('username');
+
+    try {
+      // 모든 채팅 목록을 불러옵니다.
+      const response = await getMyConversations();
+      const conversations = response.data;
+
+      // 상대방과 이미 진행 중인 채팅방이 있는지 찾습니다.
+      const existingChat = conversations.find(conv => 
+        (conv.participant1_id === myUsername && conv.participant2_id === otherUsername) ||
+        (conv.participant1_id === otherUsername && conv.participant2_id === myUsername)
+      );
+
+      //채팅방이 있으면, 거기로 이동합니다.
+      if (existingChat) {
+        console.log('기존 채팅방으로 이동:', existingChat.id);
+        navigate(`/chat/${existingChat.id}`);
+      } 
+      //채팅방이 없으면, 새로 생성하고 이동합니다.
+      else {
+        console.log('새로운 채팅방 생성 시도...');
+        const newConversationResponse = await createConversation(otherUsername);
+        const newConversation = newConversationResponse.data;
+        console.log('새로운 채팅방 생성 완료:', newConversation.id);
+        navigate(`/chat/${newConversation.id}`);
+      }
+
+    } catch (error) {
+      console.error('채팅방 이동/생성 실패:', error);
+      alert('채팅방을 만들거나 들어가는 데 실패했습니다.');
+    }
   };
+
   const handleCodeRequest = () => {
     console.log(`${name}에게 코드 요청을 보냈습니다.`);
     alert(`${name}님에게 코드 요청을 보냈습니다.`);
@@ -103,7 +144,7 @@ const DetailPage = () => {
           <div className="detail-buttons">
             <button className="detail-button" onClick={handleChat}>1대1 채팅하기</button>
             <button className="detail-button" onClick={handleCodeRequest}>
-              {connection === 'PENDING' ? '요청 대기중' : '코드 요청하기'}
+              {connection === 'PENDING' ? '요청 대기중' : '친구 요청'}
             </button>
           </div>
         </div>
