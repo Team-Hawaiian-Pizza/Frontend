@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ForceGraph2D from "react-force-graph-2d";
 import api from "../../api/axios";
-import "../../styles/Mainpage.css";
+import "../../styles/MainPage.css";
 
 /* === 스크롤 진입 시 나타나는 공통 래퍼 === */
 function Reveal({
