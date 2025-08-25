@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // AI 서버 전용 Axios 인스턴스
 const aiApi = axios.create({
-  baseURL: '/api/ai',
+  baseURL: 'http://localhost:8001/api/ai',
   headers: {
     'Content-Type': 'application/json',
   },
