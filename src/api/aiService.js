@@ -14,17 +14,36 @@ export const recommendFriends = async () => {
     max_recommendations: 10,     // 필요 시 조정
   };
 
-  // [수정] API 경로에 '/api/'를 추가합니다.
   const res = await aiApi.post('/api/ai/recommend/', payload);
   return res.data;
 };
 
 /**
+ * AI 검색 (수정됨: POST 요청으로 변경)
+ * 검색어도 추천과 동일한 POST API를 사용하도록 수정합니다.
+ */
+export const getAIHomeData = async (q = '') => {
+  const userId = localStorage.getItem('user_id');
+  if (!userId) throw new Error('AI 검색을 위해 로그인이 필요합니다.');
+
+  const payload = {
+    user_id: Number(userId),
+    request_text: q, // 검색어를 request_text에 담아 보냅니다.
+    max_recommendations: 10,
+  };
+
+  // GET이 아닌 POST로, recommendFriends와 동일한 엔드포인트를 사용합니다.
+  const res = await aiApi.post('/api/ai/recommend/', payload);
+  return res.data;
+};
+
+
+// --- 아래 함수들은 기존과 동일합니다 ---
+
+/**
  * AI가 생성/보낸 연결요청 목록 조회
- * (선택) user_id 쿼리로 필터링 가능
  */
 export const getAIRequests = async (userId = null) => {
-  // [수정] API 경로에 '/api/'를 추가합니다.
   const res = await aiApi.get('/api/ai/requests/', {
     params: userId ? { user_id: userId } : {},
   });
@@ -33,12 +52,10 @@ export const getAIRequests = async (userId = null) => {
 
 /**
  * 연결요청 상태 업데이트
- * 백엔드: request_id 필드 이름 사용
  */
 export const updateAIRequest = async (requestId, status) => {
-  // [수정] API 경로에 '/api/'를 추가합니다.
   const res = await aiApi.patch('/api/ai/requests/', {
-    request_id: requestId, // 🔑 id → request_id
+    request_id: requestId,
     status,
   });
   return res.data;
@@ -46,22 +63,8 @@ export const updateAIRequest = async (requestId, status) => {
 
 /**
  * 연결 후 피드백 등록
- * (백엔드 Serializer 스키마에 맞춰 전달)
  */
 export const postAIFeedback = async (feedbackData) => {
-  // [수정] API 경로에 '/api/'를 추가합니다.
   const res = await aiApi.post('/api/ai/feedback/', feedbackData);
-  return res.data;
-};
-
-/**
- * AI 검색 홈/검색
- * GET /api/ai  (q 파라미터로 검색)
- */
-export const getAIHomeData = async (q = '') => {
-  // [수정] API 경로에 '/api/'를 추가합니다.
-  const res = await aiApi.get('/api/ai', {
-    params: q ? { q } : {},
-  });
   return res.data;
 };
