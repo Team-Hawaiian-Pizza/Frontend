@@ -61,13 +61,13 @@ export const getMyUsername = () => {
 // 내 모든 대화 목록 가져오기
 export const getMyConversations = () => {
   const myUserId = getMyUsername();
-  return chatApi.get(`/users/${myUserId}/conversations/`);
+  return chatApi.get(`/api/chat/users/${myUserId}/conversations/`);
 };
 
 // 새로운 대화 생성하기
 export const createConversation = (otherUserId) => {
   const myUserId = getMyUsername();
-  return chatApi.post('/conversations/', {
+  return chatApi.post('/api/chat/conversations/', {
     participant1_id: myUserId,
     participant2_id: otherUserId
   });
