@@ -1,5 +1,5 @@
 import React from 'react';
-import "../pages/Search/FriendCard.css"
+import "../pages/Search/FriendCard.css";
 
 const FriendCard = ({ name,img }) => {
   return (
