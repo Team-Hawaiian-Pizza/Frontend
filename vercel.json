@@ -6,7 +6,7 @@
     },
     {
       "source": "/api/ai/(.*)",
-      "destination": "http://3.37.82.219:8000/api/ai/$1"
+      "destination": "http://3.37.82.219/api/ai/$1"
     },
     {
       "source": "/api/(.*)",
