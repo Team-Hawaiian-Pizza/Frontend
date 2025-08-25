@@ -38,7 +38,7 @@ function StampBoard() {
   const punch = async () => {
     try {
       const res = await api.post(`/rewards/stamps/${brandId}/punch`); // ✅ stamps 고정
-      const data = res?.data || {};
+      const data = res?.data || {};``
       if (data.already_full) {
         setFilled(total);
         alert("이미 가득 찼습니다. 쿠폰함을 확인하세요.");
@@ -94,7 +94,5 @@ function StampBoard() {
     </div>
   );
 }
-
-
 
 export default StampBoard;

@@ -1,6 +1,7 @@
 /* ===== 상단 기존 UI ===== */
 .main-page { background: var(--mp-soft, #f7f8fa); color: var(--mp-text, #0f172a); }
 
+
 .main-container {
   text-align: center;
   padding: 20px 16px 28px;
@@ -16,6 +17,7 @@
   gap: 8px;
   margin-bottom: 16px;
 }
+
 .search-bar input {
   width: clamp(320px, 40vw, 640px);
   height: 44px;
