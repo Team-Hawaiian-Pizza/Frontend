@@ -1,6 +1,6 @@
 import React , { useEffect, useState } from 'react'
 import {Link, NavLink, useNavigate} from 'react-router-dom';
-import "../styles/Header.css"
+import "../styles/Header.css";
 
 // 두개의 props를 부모로 부터 전달 받음
 const Header = ({isLogIn, onLogout}) => {

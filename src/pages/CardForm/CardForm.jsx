@@ -1,6 +1,6 @@
 // src/pages/CardForm/CardForm.jsx  (너가 올린 파일 경로에 맞게)
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import "./cardCreation.css";
+import "./CardCreation.css";
 
 const AGE_OPTIONS = ["10대", "20대", "30대", "40대", "50대", "60대 이상"];
 

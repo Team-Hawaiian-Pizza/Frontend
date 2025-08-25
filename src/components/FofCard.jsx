@@ -1,5 +1,5 @@
 import React from 'react';
-import "../pages/Search/FofCard.css"
+import "../pages/Search/FofCard.css";
 
 const FofCard = ({ name, img, phone, email, address, approved, onDetailClick }) => {
   return (
