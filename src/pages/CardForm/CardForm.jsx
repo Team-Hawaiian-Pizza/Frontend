@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./cardCreation.css";
 
-const AGE_OPTIONS = ["10대", "20대", "30대", "40대", "50대 이상"];
+const AGE_OPTIONS = ["10대", "20대", "30대", "40대", "50대", "60대 이상"];
 
 export const CATEGORY_MAP = {
   디자인: ["로고","브랜딩","포스터","배너","UI 디자인","카드뉴스"],
@@ -47,8 +47,6 @@ function CardForm({ mode = "create", initialData = {}, onSubmit, onPreviewChange
   const [address, setAddress] = useState(initialData.address || "");
   const [gender, setGender] = useState(initialData.gender || "");
   const [age, setAge] = useState(initialData.age || "");     // ✅ age로 통일
-
-  // 선택
   const [intro, setIntro] = useState(initialData.intro || "");
 
   // 카테고리/서비스/태그

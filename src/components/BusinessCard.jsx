@@ -88,23 +88,30 @@ function BusinessCard({
       <hr className="divider" />
 
       {/* 연락처 */}
-      <div className="contact">
-        <div className="row">
-          <span className="label">M</span>
-          <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{phone}</span>
-        </div>
-        <div className="row">
-          <span className="label">E</span>
-          <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{email}</span>
-        </div>
-        <div className="row">
-          <span className="label">H</span>
-          <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{address}</span>
-        </div>
+ <div className="contact-row">
+    {/* 좌측: 연락처 */}
+    <div className="contact">
+      <div className="row">
+        <span className="label">M</span>
+        <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{phone}</span>
       </div>
-
-      <div className="logo">GNGN</div>
+      <div className="row">
+        <span className="label">E</span>
+        <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{email}</span>
+      </div>
+      <div className="row">
+        <span className="label">H</span>
+        <span className={lockOn ? "blurred" : ""} aria-hidden={lockOn}>{address}</span>
+      </div>
     </div>
+
+    {/* 우측: 브랜드 로고 */}
+    <div className="brand-mark" aria-hidden="true">
+      <img src="/logo.png" alt="GNGN 로고" className="brand-mark-img" />
+    </div>
+  </div>
+</div>
+    
   );
 }
 

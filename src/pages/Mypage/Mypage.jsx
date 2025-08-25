@@ -1,70 +1,100 @@
 // src/pages/MyPage/MyPage.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./MyPage.css";
 import SmartBusinessCard from "../../components/SmartBusinessCard.jsx";
 import api from "../../api/axios.js";
- import { useLocation } from "react-router-dom";
 
 export default function MyPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const location = useLocation();
-  const [profile, setProfile] = useState(null);
+
+  const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState([]);
   const [stampBoards, setStampBoards] = useState([]);
+// dataURL / 순수 base64 / http URL 전부 수용 + 패딩 보정
+const normalizeBrandImage = (v) => {
+  if (!v) return "";
 
- useEffect(() => {
-   let alive = true;
-   const loadData = async () => {
-     try {
-       const userId = localStorage.getItem("user_id");       // ✅ 본인 정보는 /users/me 로딩 (마스킹/캐시 이슈 방지)
-        const [meRes, allUsersRes, stampsRes] = await Promise.all([
-         api.get(`/users/me`, { params: { ts: Date.now() } }), // 캐시 방지
-         api.get("/users/all",   { params: { ts: Date.now() } }),
-         api.get("/rewards/stamps/all", { params: { ts: Date.now() } }),
-       ]);
-       if (!alive) return;
+  const strip = (s) =>
+    String(s)
+      .replace(/^\s*\[+|\]+?\s*$/g, "") // 양끝 대괄호 제거
+      .replace(/^"+|"+$/g, "")          // 양끝 큰따옴표 제거
+      .replace(/^'+|'+$/g, "")          // 양끝 작은따옴표 제거
+      .replace(/\s+/g, "");             // 공백/개행 제거
 
-       const u = meRes?.data ?? {};
-       setProfile({
-         name: u.name ?? "",
-         sex: u.gender === "male" ? "M" : u.gender === "female" ? "F" : "",
-         age: u.age_band?.replace("s", "대") ?? "",
-         avatarUrl: u.avatar_url || "",
-         phone: u.phone || u.masked_phone || "",
-         email: u.email || u.masked_email || "",
-         address: [u.province_name, u.city_name].filter(Boolean).join(" "),
-         tag: "", // SmartBusinessCard가 실제 태그 보여줌
-         temperature: Number(u.manner_temperature ?? 75),
-       });
+  let s = strip(v);
 
-       const currentUserId = Number(userId);
-       const allUsers = allUsersRes?.data?.results ?? [];
-       const others = Array.isArray(allUsers) ? allUsers.filter(x => x?.id !== currentUserId) : [];
-       setFriends(others.slice(0, 10));
+  // 이미 dataURL 이면 본문만 패딩보정
+  if (s.startsWith("data:image/")) {
+    const i = s.indexOf(",");
+    const head = s.slice(0, i + 1);
+    let body = s.slice(i + 1);
+    const pad = body.length % 4;
+    if (pad) body += "=".repeat(4 - pad);
+    return head + body;
+  }
 
-       // 스탬프 보드 (원하면 기존 brands API로 유지)
-       const stampAll = (stampsRes?.data?.data ?? []);
-       setStampBoards(stampAll);
-     } catch (e) {
-       console.error("마이페이지 로드 실패:", e);
-     } finally {
-       if (alive) setLoading(false);
-     }
-   };
-   loadData();
+  // http(s) 링크는 그대로
+  if (/^https?:\/\//i.test(s)) return s;
 
-   // ✅ 탭을 벗겼다 돌아오면 갱신
-   const onVis = () => { if (document.visibilityState === "visible") loadData(); };
-   document.addEventListener("visibilitychange", onVis);
-   return () => { alive = false; document.removeEventListener("visibilitychange", onVis); };
- // ✅ location.state?.refresh 가 바뀌면 재요청
- }, [location.state?.refresh]);
+  // 순수 base64면 PNG로 가정해서 헤더 붙이고 패딩보정
+  if (/^[A-Za-z0-9+/=]+$/.test(s)) {
+    const pad = s.length % 4;
+    if (pad) s += "=".repeat(4 - pad);
+    return `data:image/png;base64,${s}`;
+  }
 
-  const handleEditCard = () => navigate("/card/edit");
-  const handleCoupon = () => navigate("/coupon");
-  const handleOpenStamp = (brandId) => navigate(`/stamp/${brandId}`);
+  return s; // 혹시 남는 특수 케이스
+};
+  useEffect(() => {
+    let alive = true;
+
+    const loadData = async () => {
+      try {
+        const userId = Number(localStorage.getItem("user_id") || 0);
+
+        // ✅ TDZ 회피: 비구조화 대신 명시 변수에 담기 (이름 충돌도 방지)
+        const meResp      = await api.get("/users/me", { params: { ts: Date.now() } });
+        const usersResp   = await api.get("/users/all", { params: { ts: Date.now() } });
+        const stampsResp  = await api.get("/rewards/stamps/all", { params: { ts: Date.now() } });
+
+        if (!alive) return;
+
+        // 친구 목록
+        const allUsers = usersResp?.data?.results ?? [];
+        setFriends(Array.isArray(allUsers) ? allUsers.filter(u => u?.id !== userId).slice(0, 10) : []);
+
+        // 스탬프판
+        const allStamps = stampsResp?.data?.data ?? [];
+        setStampBoards(Array.isArray(allStamps) ? allStamps : []);
+        console.log(allStamps);
+
+      } catch (err) {
+        console.error("마이페이지 로드 실패:", err);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    loadData();
+    // 탭 복귀 시 재로딩 (이벤트가 오래 붙어 있어도 에러 안나게 try/catch)
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        try { loadData(); } catch (e) { /* noop */ }
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      alive = false;
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [location.state?.refresh]); // 수정 후 돌아오면 강제 새로고침
+
+  const handleEditCard     = () => navigate("/card/edit");
+  const handleCoupon       = () => navigate("/coupon");
+  const handleOpenStamp    = (brandId) => navigate(`/stamp/${brandId}`);
   const handleProfileClick = (id) => navigate(`/profile/${id}`);
 
   if (loading) {
@@ -78,18 +108,12 @@ export default function MyPage() {
   return (
     <main className="mp-main" aria-label="My Page">
       <div className="mp-card">
-        {/* ===== 상단: 명함 ===== */}
+        {/* 명함 */}
         <section className="mp-profile-stack">
           <div className="mp-left-col">
-            <div className="card-wrap">
-              <SmartBusinessCard />
-            </div>
+            <div className="card-wrap"><SmartBusinessCard /></div>
             <div className="mp-profile-actions">
-              <button
-                type="button"
-                className="mp-btn mp-btn-primary"
-                onClick={handleEditCard}
-              >
+              <button type="button" className="mp-btn mp-btn-primary" onClick={handleEditCard}>
                 명함 수정
               </button>
             </div>
@@ -97,82 +121,77 @@ export default function MyPage() {
 
           {/* 친구목록 */}
           <div className="mp-right-col">
-            <div className="mp-friends-header">
-              친구목록 : <strong>{friends.length}</strong>
-            </div>
+            <div className="mp-friends-header">친구목록 : <strong>{friends.length}</strong></div>
             <div className="mp-friends" role="list">
-              {friends.length > 0 ? (
-                friends.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    className="mp-friend-row"
-                    onClick={() => handleProfileClick(f.id)}
-                    role="listitem"
-                  >
-                    <div className="mp-friend-avatar">
-                      {f.avatar_url ? (
-                        <img src={f.avatar_url} alt={`${f.name || f.username} 프로필`} />
-                      ) : (
-                        <div className="mp-friend-ph" />
-                      )}
-                    </div>
-                    <div className="mp-friend-meta">
-                      <div className="mp-friend-name">{f.name || f.username}</div>
-                      <div className="mp-friend-msg">{f.intro || "안녕하세요!"}</div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div style={{ padding: 20, textAlign: "center", color: "#666" }}>
-                  친구가 없습니다
-                </div>
+              {friends.length ? friends.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className="mp-friend-row"
+                  onClick={() => handleProfileClick(f.id)}
+                  role="listitem"
+                >
+                  <div className="mp-friend-avatar">
+                    {f.avatar_url ? (
+                      <img src={f.avatar_url} alt={`${f.name || f.username} 프로필`} />
+                    ) : (
+                      <div className="mp-friend-ph" />
+                    )}
+                  </div>
+                  <div className="mp-friend-meta">
+                    <div className="mp-friend-name">{f.name || f.username}</div>
+                    <div className="mp-friend-msg">{f.intro || "안녕하세요!"}</div>
+                  </div>
+                </button>
+              )) : (
+                <div style={{ padding: 20, textAlign: "center", color: "#666" }}>친구가 없습니다</div>
               )}
             </div>
           </div>
         </section>
 
-        {/* ===== 스탬프판 ===== */}
+        {/* 스탬프판 */}
         <section className="mp-stamps">
           <div className="mp-sec-header">
             <h3 className="mp-sec-title">내 스탬프판</h3>
-            <button type="button" className="mp-btn mp-btn-ghost" onClick={handleCoupon}>
-              쿠폰함
-            </button>
+            <button type="button" className="mp-btn mp-btn-ghost" onClick={handleCoupon}>쿠폰함</button>
           </div>
 
-          <div className="mp-stamp-grid">
-            {stampBoards.length > 0 ? (
-              stampBoards.map((s) => (
-                <article key={s.brand_id} className="mp-stamp-card">
-                  <div className="mp-stamp-thumb" aria-hidden>
-                    {s.brand_image ? (
-                      <img
-                        src={s.brand_image}
-                        alt={s.brand_name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="mp-stamp-title">{s.brand_name}</div>
-                  <div style={{ fontSize: "12px", color: "#666", marginBottom: "8px" }}>
-                    {s.filled} / {s.total} 스탬프
-                  </div>
-                  <button
-                    type="button"
-                    className="mp-btn mp-btn-light"
-                    onClick={() => handleOpenStamp(s.brand_id)}
-                  >
-                    도장판 보기
-                  </button>
-                </article>
-              ))
-            ) : (
-              <div style={{ padding: 20, textAlign: "center", color: "#666" }}>
-                스탬프판이 없습니다
-              </div>
-            )}
-          </div>
+ <div className="mp-stamp-grid">
+  {stampBoards.length ? stampBoards.map((s) => {
+    const src = normalizeBrandImage(s.brand_image);
+    return (
+      <article key={s.brand_id} className="mp-stamp-card">
+        <div
+          className="mp-stamp-thumb"
+          aria-hidden
+          style={{
+            backgroundImage: src ? `url("${src}")` : "none",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        <div className="mp-stamp-title">{s.brand_name}</div>
+        <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+          {s.filled} / {s.total} 스탬프
+        </div>
+        <button
+          type="button"
+          className="mp-btn mp-btn-light"
+          onClick={() => handleOpenStamp(s.brand_id)}
+        >
+          도장판 보기
+        </button>
+      </article>
+    );
+  }) : (
+    <div style={{ padding: 20, textAlign: "center", color: "#666" }}>
+      스탬프판이 없습니다
+    </div>
+  )}
+</div>
+
         </section>
       </div>
     </main>

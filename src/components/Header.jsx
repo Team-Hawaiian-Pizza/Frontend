@@ -19,30 +19,28 @@ const Header = ({isLogIn, onLogout}) => {
   }, []);
 
   return (
-    <header className='header'>
-        <div className='wrap'>
-            <Link to="/" className='logo'>건너건너</Link>
-            <nav className='header-nav'>
-                <NavLink to="/mypage" className="item">Mypage</NavLink>
-                <NavLink to="/search" className="item">Search</NavLink>
-                <NavLink to="/chat" className="item">Chatting</NavLink>
-                <NavLink to="/connect" className="item">Connection</NavLink>
-                
-              {/* isLogin이 ture일 경우 -> 로그아웃 버튼*/}
-              {isLogIn ? (
-              <button
-                className='logout'
-                onClick={() => { onLogout(); navigate('/'); }} // ✅ 로그아웃 후 홈 이동 (권장)
-              >
-                Logout
-              </button>
-              ) : (
-                  <NavLink to="/login" className='item' 
-                    onClick={ () => console.log("로그인 버튼이 클릭됨")}>Login / Signup</NavLink>
-              )}
-            </nav>  
-        </div>
-    </header>
+    <header className="header">
+  <div className="wrap">
+    <div className="brand">
+      <img src="/logo.png" alt="GNGN 로고" className="brand-mark-img" />
+      <Link to="/" className="logo"> 건너건너</Link>
+    </div>
+
+    <nav className="header-nav">
+      <NavLink to="/mypage" className="item">Mypage</NavLink>
+      <NavLink to="/search" className="item">Search</NavLink>
+      <NavLink to="/chat" className="item">Chatting</NavLink>
+      <NavLink to="/connect" className="item">Connection</NavLink>
+      {isLogIn ? (
+        <button className="logout" onClick={() => { onLogout(); navigate('/'); }}>
+          Logout
+        </button>
+      ) : (
+        <NavLink to="/login" className="item">Login / Signup</NavLink>
+      )}
+    </nav>
+  </div>
+</header>
   )
 }
 

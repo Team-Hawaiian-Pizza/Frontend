@@ -148,7 +148,7 @@ export default function SmartBusinessCard({ userId, className = "" }) {
           <div className="row"><span className="label">E</span><span>–</span></div>
           <div className="row"><span className="label">H</span><span>–</span></div>
         </div>
-        <div className="logo">GNGN</div>
+
       </div>
     );
   }

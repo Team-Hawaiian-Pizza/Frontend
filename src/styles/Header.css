@@ -1,10 +1,10 @@
 /* 헤더 전체 */
 .header {
-  position: sticky; /*스크롤 시 상단 고정*/
+  position: sticky;
   top: 0;
-  z-index: 50; /*다른 요소들 보다 위에 표시되도록 우선 순위를 높임*/
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.08), 0 1px 0 rgba(17, 24, 39, 0.05);
+  z-index: 50;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(29,78,216,.08), 0 1px 0 rgba(17,24,39,.05);
 }
 
 /* 내부 정렬 */
@@ -12,23 +12,40 @@
   padding: 26px 34px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* ⬇️ space-between 제거 */
+  justify-content: flex-start;
 }
 
-/* 로고 */
-.logo {
-  text-decoration: none; /*밑줄 제거*/
-  font-size: 40px;
-  font-weight: 800;
-  color: #1D4ED8
+/* 로고+텍스트 묶음 */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;         /* 로고와 텍스트 간격 */
 }
 
-/* 네비게이션 */
+/* 네비는 오른쪽으로 밀기 */
 .header-nav {
-  display: flex; /*아이템들 가로로 배치*/
+  display: flex;
   align-items: center;
   gap: 18px;
+  margin-left: auto; /* ⬅️ 오른쪽 정렬 */
 }
+
+/* 로고 텍스트 */
+.logo {
+  text-decoration: none;
+  font-size: 40px;
+  font-weight: 800;
+  color: #1D4ED8;
+}
+
+/* 로고 이미지 */
+.brand-mark-img {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+}
+
 
 /* 링크 */
 .header-nav .item {
@@ -104,3 +121,11 @@
 .logout:hover::after {
   transform: scaleX(1);
 }
+
+/* 로고 이미지만 안전하게 스타일 */
+.brand-mark-img{
+  width: 60px;
+  height: 60px;
+  object-fit: contain;  /* 로고 비율 유지 */
+}
+

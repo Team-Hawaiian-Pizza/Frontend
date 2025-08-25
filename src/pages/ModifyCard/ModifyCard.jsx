@@ -12,7 +12,7 @@ const toAgeGroup = (v) => {
   if (/^\d0s(\+)?$/i.test(v)) return v;
   const m = /^(\d{1,2})대$/.exec(v);
   if (m) return `${m[1]}s`;
-  if (/^60/.test(v) || v === "50대 이상") return "60s+";
+  if (/^60/.test(v) || v === "60대 이상") return "60s+";
   return v;
 };
 

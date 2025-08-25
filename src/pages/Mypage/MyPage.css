@@ -160,3 +160,14 @@
 @media (max-width: 860px){
   .mp-card .mp-profile-stack{ grid-template-columns: 1fr; }
 }
+
+/* 썸네일 박스 자체에 사이즈를 줘야 배경이 보입니다 */
+.mp-stamp-thumb{
+  width: 100%;
+  height: 120px;          /* 필요 높이로 조정 */
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background-color: #f3f4f6; /* 이미지 없을 때 회색 배경 */
+  overflow: hidden;
+}
+
