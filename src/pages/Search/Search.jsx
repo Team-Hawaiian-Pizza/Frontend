@@ -13,8 +13,8 @@ import './Search.css';
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [q, setQ] = useState(searchParams.get('q') || '');
-  // 'users' 상태는 이제 { friend, fof } 형태의 객체 배열을 저장합니다.
-  const [users, setUsers] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -39,37 +39,28 @@ const Search = () => {
         
         console.log('뜯어볼 API 응답 객체:', JSON.stringify(responseData, null, 2));
         
-        let processedData = [];
-
-        // 1. 추천 API 응답 처리
-        if (responseData?.recommendations) {
-            console.log('🤖 추천 응답 데이터 처리');
-            // 'introducer_user'를 friend로, 'recommended_user'를 fof로 매핑합니다.
+        // AI 추천 결과 처리
+        if (queryFromUrl) {
+          console.log('🔍 검색 모드 - AI 추천 결과 처리');
+          setSearchResults(responseData);
+          setRecommendations([]);
+        } else {
+          console.log('🤖 기본 추천 모드');
+          let processedData = [];
+          if (responseData?.recommendations) {
             processedData = responseData.recommendations.map(rec => ({
-                friend: rec.introducer_user,
-                fof: rec.recommended_user,
+              friend: rec.introducer_user,
+              fof: rec.recommended_user,
             }));
-        } 
-        // 2. 검색 API 응답 처리 (서버가 'results' 키로 배열을 준다고 가정)
-        else if (Array.isArray(responseData?.results)) {
-            console.log('🔍 검색 응답 데이터 처리');
-            // 검색 결과에는 소개해준 친구가 없으므로, '검색 결과'라는 이름의 가상 친구를 만듭니다.
-            processedData = responseData.results.map((user, idx) => ({
-                friend: { 
-                    id: `friend_${user.id || idx}`,
-                    name: `검색 결과`,
-                    img: '/friend-1.jpg',
-                },
-                fof: user,
-            }));
+          }
+          setRecommendations(processedData);
+          setSearchResults(null);
         }
-
-        console.log('📊 화면에 표시할 처리된 데이터:', processedData);
-        setUsers(processedData);
 
       } catch (err) {
         console.error('데이터 로드 실패 (Search.jsx):', err?.response?.data || err?.message || err);
-        setUsers([]);
+        setRecommendations([]);
+        setSearchResults(null);
       } finally {
         setLoading(false);
         console.log('--- Search.jsx useEffect 종료 ---');
@@ -90,8 +81,7 @@ const Search = () => {
     try {
       console.log(`승인 요청: ${id}`);
       await api.post(`/connections/accept/${id}`);
-      // users 상태가 객체 배열이므로, fof.id를 기준으로 업데이트합니다.
-      setUsers((list) => list.map((pair) => (pair.fof.id === id ? { ...pair, fof: { ...pair.fof, approved: true } } : pair)));
+      setRecommendations((list) => list.map((pair) => (pair.fof.id === id ? { ...pair, fof: { ...pair.fof, approved: true } } : pair)));
       console.log(`승인 성공: ${id}`);
     } catch (err) {
       console.error('승인 실패:', err?.response?.data || err?.message || err);
@@ -101,17 +91,73 @@ const Search = () => {
 
   const goToDetail = (id) => navigate(`/profile/${id}`);
 
-  // useMemo 로직이 더 간단해졌습니다.
   const friendFofPairs = useMemo(() => {
     const currentUserId = Number(localStorage.getItem('user_id'));
     console.log(`MEMO 계산: 현재 사용자를 필터링합니다 (user_id: ${currentUserId})`);
     
-    if (!Array.isArray(users)) return [];
-    // 'users'는 이미 {friend, fof} 쌍의 배열이므로, fof가 현재 사용자인 경우만 제외합니다.
-    return users
+    if (!Array.isArray(recommendations)) return [];
+    return recommendations
         .filter(pair => pair.fof?.id !== currentUserId)
         .slice(0, 10);
-  }, [users]);
+  }, [recommendations]);
+
+  const renderSearchResults = () => {
+    if (!searchResults) return null;
+    
+    const { inferred_category, request_id, recommendations: recs, response_time } = searchResults;
+    
+    return (
+      <div className="search-results-container">
+        <div className="results-header">
+          <h2>추천 결과</h2>
+          <div className="results-meta">
+            <span>응답 시간: {response_time?.toFixed(2)}초</span>
+            <span> | 분류 카테고리: {inferred_category}</span>
+            <span> | 요청 ID: {request_id}</span>
+          </div>
+        </div>
+        
+        <h3>📍 추천 인맥 ({recs?.length || 0}명)</h3>
+        
+        {recs && recs.length > 0 ? (
+          <div className="recommendations-list">
+            {recs.map((rec, index) => {
+              const user = rec.recommended_user || {};
+              const introducer = rec.introducer_user || {};
+              const score = Math.round((rec.ai_score || 0) * 100);
+              
+              return (
+                <div key={index} className="recommendation-item">
+                  <div className="rec-header">
+                    <div className="rec-name">{user.name || '이름없음'}</div>
+                    <div className="rec-score">{score}점</div>
+                  </div>
+                  
+                  <div className="rec-location">
+                    📍 {user.province_name} {user.city_name} | {user.age_band} {user.gender === 'male' ? '남성' : user.gender === 'female' ? '여성' : ''}
+                  </div>
+                  
+                  <div className="rec-intro">
+                    "{user.intro || '소개글이 없습니다.'}"
+                  </div>
+                  
+                  <div className="rec-tags">
+                    <span className="tag">👥 소개자: {introducer.name || '알 수 없음'}</span>
+                    <span className="tag">🔗 {rec.relationship_degree}촌 관계</span>
+                    <span className="tag">🌡️ 매너온도 {user.manner_temperature || 'N/A'}°C</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="no-results">
+            <p>추천할 인맥이 없습니다.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) return <div style={{ padding: 20 }}>로딩 중...</div>;
 
@@ -127,31 +173,34 @@ const Search = () => {
         <button className="search-btn" type="submit">검색</button>
       </form>
 
-      <section className="list">
-        <div className="friend-card-header">친구</div>
-        <div className="fof-card-header">건너건너</div>
-        
-        {friendFofPairs.map((pair) => (
-          <React.Fragment key={pair.fof.id}>
-            <div className="friend-list-item">
-              {/* 실제 친구(introducer_user)의 이름과 이미지를 사용합니다. */}
-              <FriendCard name={pair.friend.name} img={pair.friend.avatar_url || '/friend-1.jpg'} />
-            </div>
-            <div className="fof-list-item">
-              <FofCard
-                img={pair.fof.avatar_url || '/friend-1.jpg'}
-                name={pair.fof.name || '이름없음'}
-                phone={pair.fof.masked_phone || '010-****-****'}
-                email={pair.fof.masked_email || '****@****'}
-                address={[pair.fof.province_name, pair.fof.city_name].filter(Boolean).join(' ') || '비공개'}
-                approved={Boolean(pair.fof.approved)}
-                onApprove={() => approveFof(pair.fof.id)}
-                onDetailClick={() => goToDetail(pair.fof.id)}
-              />
-            </div>
-          </React.Fragment>
-        ))}
-      </section>
+      {searchResults ? (
+        renderSearchResults()
+      ) : (
+        <section className="list">
+          <div className="friend-card-header">친구</div>
+          <div className="fof-card-header">건너건너</div>
+          
+          {friendFofPairs.map((pair) => (
+            <React.Fragment key={pair.fof.id}>
+              <div className="friend-list-item">
+                <FriendCard name={pair.friend.name} img={pair.friend.avatar_url || '/friend-1.jpg'} />
+              </div>
+              <div className="fof-list-item">
+                <FofCard
+                  img={pair.fof.avatar_url || '/friend-1.jpg'}
+                  name={pair.fof.name || '이름없음'}
+                  phone={pair.fof.masked_phone || '010-****-****'}
+                  email={pair.fof.masked_email || '****@****'}
+                  address={[pair.fof.province_name, pair.fof.city_name].filter(Boolean).join(' ') || '비공개'}
+                  approved={Boolean(pair.fof.approved)}
+                  onApprove={() => approveFof(pair.fof.id)}
+                  onDetailClick={() => goToDetail(pair.fof.id)}
+                />
+              </div>
+            </React.Fragment>
+          ))}
+        </section>
+      )}
     </div>
   );
 };
