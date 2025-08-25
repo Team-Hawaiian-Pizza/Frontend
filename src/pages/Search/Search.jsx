@@ -1,76 +1,90 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FriendCard from '../../components/FriendCard';
 import FofCard from '../../components/FofCard';
-import api from '../../api/axios';
+
+import api from '../../api/axios';          // 일반 데이터 서버
+import { 
+  recommendFriends, 
+  getAIHomeData 
+} from '../../api/aiService';               // AI 서버 서비스
 import './Search.css';
 
 const Search = () => {
-  const [q, setQ] = useState('');
-  const [users, setUsers] = useState([]);     // ← 건너건너 리스트 (항상 배열)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [q, setQ] = useState(searchParams.get('q') || '');
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 공통: 응답을 항상 배열로 정규화
   const toArray = (data) => {
+    // 백엔드 응답이 배열 또는 { results: [] } 모두 수용
     if (Array.isArray(data?.results)) return data.results;
     if (Array.isArray(data)) return data;
+    // 혹시 {items:[...]} 같은 케이스도 방어
+    if (Array.isArray(data?.items)) return data.items;
     return [];
   };
 
-  // 최초 로드
   useEffect(() => {
+    const queryFromUrl = searchParams.get('q')?.trim();
+    console.log('--- Search.jsx useEffect 실행 ---');
+    console.log('URL 쿼리 파라미터 (q):', queryFromUrl);
+
     const loadData = async () => {
+      setLoading(true);
       try {
-        const res = await api.get('/users/all', {
-          // 백엔드에서 User-Id 필요하면 주석 해제
-          // headers: { 'User-Id': localStorage.getItem('user_id') || '1' }
-        });
-        const arr = toArray(res.data);
+        let responseData;
+
+        if (queryFromUrl) {
+          console.log('🔍 검색 모드 실행');
+          responseData = await getAIHomeData(queryFromUrl);
+        } else {
+          console.log('🤖 AI 추천 모드 실행');
+          responseData = await recommendFriends();
+        }
+        
+        console.log('📦 API로부터 받은 원본 데이터:', responseData);
+        const arr = toArray(responseData);
+        console.log('📊 화면에 표시할 배열 데이터:', arr);
         setUsers(arr);
-        console.log('users(all):', arr);
+
       } catch (err) {
-        console.error('데이터 로드 실패:', err);
+        console.error('데이터 로드 실패 (Search.jsx):', err?.response?.data || err?.message || err);
         setUsers([]);
       } finally {
         setLoading(false);
+        console.log('--- Search.jsx useEffect 종료 ---');
       }
     };
+
     loadData();
-  }, []);
+  }, [searchParams]);
 
-  // 검색
-  const onSubmit = async (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
-    if (!q.trim()) return;
-
-    try {
-      const res = await api.get(`/connections/search?q=${encodeURIComponent(q)}`);
-      const arr = toArray(res.data);
-      setUsers(arr);
-      console.log('search result:', arr);
-    } catch (err) {
-      console.error('검색 실패:', err);
-      alert('검색에 실패했습니다.');
-    }
+    const next = q.trim();
+    console.log('폼 제출. 검색어:', next);
+    setSearchParams(next ? { q: next } : {});
   };
 
   const approveFof = async (id) => {
     try {
+      console.log(`승인 요청: ${id}`);
       await api.post(`/connections/accept/${id}`);
-      setUsers(list => list.map(u => (u.id === id ? { ...u, approved: true } : u)));
+      setUsers((list) => list.map((u) => (u.id === id ? { ...u, approved: true } : u)));
+      console.log(`승인 성공: ${id}`);
     } catch (err) {
-      console.error('승인 실패:', err);
+      console.error('승인 실패:', err?.response?.data || err?.message || err);
       alert('승인 요청에 실패했습니다.');
     }
   };
 
   const goToDetail = (id) => navigate(`/profile/${id}`);
 
-  // 화면 표시용으로 매핑 (서버 필드명 → UI 필드명)
   const friendFofPairs = useMemo(() => {
     const currentUserId = Number(localStorage.getItem('user_id'));
-    const otherUsers = users.filter(u => u.id !== currentUserId);
+    const otherUsers = users.filter((u) => u?.id !== currentUserId);
 
     return otherUsers.slice(0, 10).map((u, idx) => ({
       friend: {
@@ -85,7 +99,7 @@ const Search = () => {
         phone: u.masked_phone || '010-****-****',
         email: u.masked_email || '****@****',
         address: [u.province_name, u.city_name].filter(Boolean).join(' ') || '비공개',
-        approved: !!u.approved,
+        approved: Boolean(u.approved),
       },
     }));
   }, [users]);
@@ -101,7 +115,7 @@ const Search = () => {
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <button className="search-btn">검색</button>
+        <button className="search-btn" type="submit">검색</button>
       </form>
 
       <section className="list">
