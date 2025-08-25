@@ -14,7 +14,7 @@ export const recommendFriends = async () => {
     max_recommendations: 10,     // 필요 시 조정
   };
 
-  const res = await aiApi.post('/api/ai/recommend/', payload);
+  const res = await aiApi.post('/recommend/', payload);
   return res.data;
 };
 
@@ -33,7 +33,7 @@ export const getAIHomeData = async (q = '') => {
   };
 
   // GET이 아닌 POST로, recommendFriends와 동일한 엔드포인트를 사용합니다.
-  const res = await aiApi.post('/api/ai/recommend/', payload);
+  const res = await aiApi.post('/recommend/', payload);
   return res.data;
 };
 
@@ -44,7 +44,7 @@ export const getAIHomeData = async (q = '') => {
  * AI가 생성/보낸 연결요청 목록 조회
  */
 export const getAIRequests = async (userId = null) => {
-  const res = await aiApi.get('/api/ai/requests/', {
+  const res = await aiApi.get('/requests/', {
     params: userId ? { user_id: userId } : {},
   });
   return res.data;
@@ -54,7 +54,7 @@ export const getAIRequests = async (userId = null) => {
  * 연결요청 상태 업데이트
  */
 export const updateAIRequest = async (requestId, status) => {
-  const res = await aiApi.patch('/api/ai/requests/', {
+  const res = await aiApi.patch('/requests/', {
     request_id: requestId,
     status,
   });
@@ -65,6 +65,6 @@ export const updateAIRequest = async (requestId, status) => {
  * 연결 후 피드백 등록
  */
 export const postAIFeedback = async (feedbackData) => {
-  const res = await aiApi.post('/api/ai/feedback/', feedbackData);
+  const res = await aiApi.post('/feedback/', feedbackData);
   return res.data;
 };

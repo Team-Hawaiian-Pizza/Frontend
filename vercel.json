@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/chat/:path*",
-      "destination": "http://15.165.220.74:8000/api/chat/:path*"
+      "destination": "http://15.165.220.74:8000/:path*"
     },
     {
       "source": "/api/ai/:path*",
