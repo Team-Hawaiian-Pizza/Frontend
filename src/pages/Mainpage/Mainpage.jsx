@@ -320,9 +320,81 @@ export default function Mainpage() {
         </div>
       </div>
 
-      {/* ====== 아래부터 랜딩 섹션(스크롤 등장) ====== */}
-      <div className="landing">
-        {/* ... (이하 생략) ... */}
+     <div className="landing">
+        {/* 소개 섹션 */}
+        <Reveal className="l-sec l-intro" variant="up">
+          <h2 className="l-title">건너건너</h2>
+          <p className="l-sub">가까운 인맥을 중심으로, 소개·대화·혜택까지 한 번에 연결해 주는 연결 지향형 지역사회 네트워킹 서비스입니다.</p>
+        </Reveal>
+
+        {/* 기능 카드 3개 */}
+        <Reveal className="l-sec" variant="up">
+          <div className="l-grid-3">
+            <Reveal className="l-card" variant="up" delay={0}>
+              <div className="l-emoji">📇</div>
+              <h3>명함 & 승인 공개</h3>
+              <p>가까운 사람이 아니면 민감정보는 자동 블러 처리됩니다. 안전하게 나를 소개해요.</p>
+            </Reveal>
+            <Reveal className="l-card" variant="up" delay={100}>
+              <div className="l-emoji">💬</div>
+              <h3>친구 추가 및 1:1 대화</h3>
+              <p>추가적인 요구사항 조율을 위한 1:1 대화 기능을 제공합니다.</p>
+            </Reveal>
+            <Reveal className="l-card" variant="up" delay={200}>
+              <div className="l-emoji">🎟️</div>
+              <h3>스탬프 & 쿠폰</h3>
+              <p>해당 서비스를 통해 결제가 이루어지면, 자동으로 스탬프가 적립됩니다.</p>
+            </Reveal>
+          </div>
+        </Reveal>
+
+        {/* 동작 방식 3단계 */}
+        <section className="l-sec l-steps">
+          <Reveal className="l-step" variant="left">
+            <span className="l-badge">STEP 1</span>
+            <h3>프로필 & 명함 만들기</h3>
+            <p>사진·태그·연락처를 등록하고 내 명함을 완성해요.</p>
+          </Reveal>
+          <Reveal className="l-step" variant="left" delay={100}>
+            <span className="l-badge">STEP 2</span>
+            <h3>친구 추가 & 대화 시작</h3>
+            <p>친구목록에서 바로 1:1로 이어집니다.</p>
+          </Reveal>
+          <Reveal className="l-step" variant="left" delay={200}>
+            <span className="l-badge">STEP 3</span>
+            <h3>스탬프 적립 & 쿠폰 사용</h3>
+            <p>결제 시 스탬프가 쌓이고, 완성 보상으로 혜택을 받아요.</p>
+          </Reveal>
+        </section>
+
+        {/* 스탬프/쿠폰 쇼케이스 */}
+        <Reveal className="l-sec l-showcase" variant="up">
+          <div className="l-showbox">
+            <div className="l-dots">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div className={`l-dot ${i < 5 ? "on" : ""}`} key={i} />
+              ))}
+            </div>
+            <div className="l-copy">
+              <h3>10개 채우면 보상!</h3>
+              <p>완성 시 자동 발급되는 <b>할인/증정 쿠폰</b>으로 재방문을 만듭니다.</p>
+              <div className="l-cta">
+                <a className="lp-btn lp-btn-light" href="/stamp/1">스탬프 보기</a>
+                <a className="lp-btn lp-btn-ghost" href="/coupon">쿠폰함 보기</a>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* 마지막 CTA */}
+        <Reveal className="l-sec l-cta" variant="scale">
+          <h2>지금 바로 시작해요</h2>
+          <p>건너건너에서 지역 사회 네트워크를 경험하세요.</p>
+          <div className="l-cta">
+            <a className="lp-btn lp-btn-primary" href="/entry">시작하기</a>
+            <a className="lp-btn lp-btn-ghost" href="/mypage">마이페이지로</a>
+          </div>
+        </Reveal>
       </div>
     </main>
   );
