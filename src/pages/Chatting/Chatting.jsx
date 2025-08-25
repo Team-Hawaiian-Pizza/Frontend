@@ -129,7 +129,7 @@ const ChattingPage = () => {
   const loadChatList = async () => {
     try {
       const currentUsername = localStorage.getItem('username');
-      const response = await chatApi.get(`/users/${currentUsername}/conversations/`);
+      const response = await chatApi.get(`/api/chat/users/${currentUsername}/conversations/`);
       const conversations = response.data;
       
       const formattedChats = conversations.map(conv => {
@@ -158,7 +158,7 @@ const ChattingPage = () => {
   // 특정 conversation의 메시지 로드
   const loadMessages = async (conversationId) => {
     try {
-      const response = await chatApi.get(`/conversations/${conversationId}/messages/`);
+      const response = await chatApi.get(`/api/chat/conversations/${conversationId}/messages/`);
       const messages = response.data;
       
       const currentUsername = localStorage.getItem('username');
@@ -306,7 +306,7 @@ const ChattingPage = () => {
 
     // 웹소켓이 없으면 HTTP API로 전송
     try {
-      const response = await chatApi.post(`/conversations/${conversationId}/messages/send/`, {
+      const response = await chatApi.post(`/api/chat/conversations/${conversationId}/messages/send/`, {
         sender_id: currentUsername,
         content: text,
         message_type: 'text'
