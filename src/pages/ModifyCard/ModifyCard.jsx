@@ -3,43 +3,61 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardForm from "../CardForm/CardForm.jsx";
 import api from "../../api/axios.js";
+import { splitAddressToProvinceCity } from "../../lib/parseCity.js";
 
 const genderKR2EN = { "남성": "male", "여성": "female", "기타": "other" };
-// "20대" → "20s", 이미 "20s"면 그대로 통과
+
 const toAgeGroup = (v) => {
   if (!v) return "";
-  if (/^\d0s(\+)?$/.test(v)) return v;                // "20s", "60s+" 형태
-  const m = /^(\d{1,2})대$/.exec(v);                   // "20대"
+  if (/^\d0s(\+)?$/i.test(v)) return v;
+  const m = /^(\d{1,2})대$/.exec(v);
   if (m) return `${m[1]}s`;
-  if (v === "60대 이상" || v === "60+") return "60s+";
+  if (/^60/.test(v) || v === "50대 이상") return "60s+";
   return v;
 };
 
-function toForm(u) {
+const cleanTagString = (raw) => {
+  if (raw == null) return [];
+  const norm = (s) => String(s).replace(/^#/, "").trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.flatMap((x) => Array.isArray(x) ? x : [x]).map(norm).filter(Boolean);
+    }
+  } catch (_) {}
+  return String(raw)
+    .replace(/^\s*\[+|\]+?\s*$/g, "")
+    .replace(/^"+|"+$/g, "")
+    .replace(/^'+|'+$/g, "")
+    .split(/[,;\n\r]+/) // 공백은 분리자 X → "SNS 운영" 유지
+    .map(norm)
+    .filter(Boolean);
+};
+
+const parseTags = (raw) => cleanTagString(Array.isArray(raw) ? JSON.stringify(raw) : raw);
+
+function toForm(u = {}) {
+  const ageKR = (() => {
+    const m = /^(\d+)s$/i.exec(u.age_band || "");
+    if (m) return `${m[1]}대`;
+    if ((u.age_band || "").toLowerCase() === "60s+") return "60대 이상";
+    return u.age_band || "";
+  })();
+
   return {
     name: u.name ?? "",
     phone: u.phone ?? "",
     email: u.email ?? "",
     address: [u.province_name, u.city_name].filter(Boolean).join(" "),
     gender: u.gender === "male" ? "남성" : u.gender === "female" ? "여성" : "기타",
-    age: u.age_band ?? "",                 // "20s" 그대로 두고 폼에서 보이게
-    intro: u.intro ?? "",
-    tags: Array.isArray(u.tags) ? u.tags : [],
+    age: ageKR,
+    intro: u.bio ?? u.intro ?? "",
+    tags: parseTags(u.tags),
     preferredCategory: u.category ?? "",
     preferredService: u.service ?? "",
+    profileUrl: u.avatar_url || ""
   };
 }
-
-// 문자열/배열 상관없이 태그를 배열로 정규화
-const normalizeTags = (formData, obj) => {
-  const multi = formData.getAll("tags"); // tags 필드가 여러개면 모으기
-  let raw = multi?.length ? multi : obj.tags;
-  if (raw == null) return [];
-  if (typeof raw === "string") raw = raw.split(/[,\s]+/);
-  return (Array.isArray(raw) ? raw : [raw])
-    .map((t) => String(t).replace(/^#/, "").trim())
-    .filter(Boolean);
-};
 
 export default function ModifyCard() {
   const [loading, setLoading] = useState(true);
@@ -47,11 +65,11 @@ export default function ModifyCard() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // GET /users/me
+  // 내 정보 로드 (캐시 무력화)
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get("/users/me");
+        const res = await api.get("/users/me", { params: { _ts: Date.now() } });
         setInit(toForm(res.data ?? {}));
       } catch (e) {
         console.error(e);
@@ -62,28 +80,42 @@ export default function ModifyCard() {
     })();
   }, []);
 
-  // PATCH /users/me/update
+  // 저장
   const handleUpdate = async (formData) => {
     try {
       setSaving(true);
 
+      const user_id = Number(localStorage.getItem("user_id"));
       const obj = Object.fromEntries(formData.entries());
-      const userId = Number(localStorage.getItem("user_id"));
+      const { province_name, city_name } = splitAddressToProvinceCity(obj.address || "");
+      
+
+      // 프로필 파일 감지
+      const file = formData.get("profile");
+      let avatar_url = obj.profileUrl || init?.profileUrl || "";
+
+      if (file && typeof file === "object" && file.size > 0) {
+        const uploaded = await uploadAvatar(file);
+        if (uploaded) avatar_url = uploaded;
+      }
 
       const payload = {
-        user_id: userId,                                           // ✅ 필수
+        user_id,
+        // 서버가 허용하는 필드만
+        name: obj.name || undefined,
+        email: obj.email || undefined,
         phone: obj.phone || "",
-        address: obj.address || "",
-        gender: genderKR2EN[obj.gender] || obj.gender || "other",
-        age_group: toAgeGroup(obj.age),
+        province_name,
+        city_name,
+        gender: genderKR2EN[obj.gender] || "other",
+        age_band: toAgeGroup(obj.age),     // 최신 스펙
+        age_group: toAgeGroup(obj.age),    // 구버전 호환
         category: obj.preferredCategory || "",
         service: obj.preferredService || "",
-        tags: normalizeTags(formData, obj),
-        bio: obj.intro || "",                                      // ✅ intro → bio
+        tags: cleanTagString(obj.tags),    // ["SNS 운영", ...]
+        intro: obj.intro || "",
+        avatar_url
       };
-
-      // 불필요한 키는 빼고 전송 (name/email 등 스펙 외 키 제거)
-      // console.log("update payload", payload);
 
       let res;
       try {
@@ -100,7 +132,8 @@ export default function ModifyCard() {
       if (!ok) throw new Error(res?.data?.error || "업데이트 실패");
 
       alert("수정되었습니다.");
-      navigate("/mypage", { replace: true });
+      // 강제 리프레시 신호
+      navigate("/mypage", { replace: true, state: { refresh: Date.now() } });
     } catch (e) {
       console.error(e);
       alert(`수정 중 오류: ${e?.response?.status || ""} ${e?.response?.data?.error || e.message}`);
@@ -110,7 +143,7 @@ export default function ModifyCard() {
   };
 
   if (loading) return <div style={{ padding: 16 }}>불러오는 중…</div>;
-  if (!init) return <div style={{ padding: 16 }}>데이터 없음</div>;
+  if (!init)   return <div style={{ padding: 16 }}>데이터 없음</div>;
 
   return (
     <CardForm

@@ -4,50 +4,63 @@ import { useNavigate } from "react-router-dom";
 import "./MyPage.css";
 import SmartBusinessCard from "../../components/SmartBusinessCard.jsx";
 import api from "../../api/axios.js";
+ import { useLocation } from "react-router-dom";
 
 export default function MyPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [friends, setFriends] = useState([]);
   const [stampBoards, setStampBoards] = useState([]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const userId = localStorage.getItem("user_id");
+ useEffect(() => {
+   let alive = true;
+   const loadData = async () => {
+     try {
+       const userId = localStorage.getItem("user_id");       // ✅ 본인 정보는 /users/me 로딩 (마스킹/캐시 이슈 방지)
+        const [meRes, allUsersRes, stampsRes] = await Promise.all([
+         api.get(`/users/me`, { params: { ts: Date.now() } }), // 캐시 방지
+         api.get("/users/all",   { params: { ts: Date.now() } }),
+         api.get("/rewards/stamps/all", { params: { ts: Date.now() } }),
+       ]);
+       if (!alive) return;
 
-        const [profileRes, allUsersRes, stampsRes] = await Promise.all([
-          api.get(`/users/profiles/${userId}`),
-          api.get("/users/all"),
-          api.get("/rewards/stamps/all"), // ✅ 전체 스탬프판 조회
-        ]);
+       const u = meRes?.data ?? {};
+       setProfile({
+         name: u.name ?? "",
+         sex: u.gender === "male" ? "M" : u.gender === "female" ? "F" : "",
+         age: u.age_band?.replace("s", "대") ?? "",
+         avatarUrl: u.avatar_url || "",
+         phone: u.phone || u.masked_phone || "",
+         email: u.email || u.masked_email || "",
+         address: [u.province_name, u.city_name].filter(Boolean).join(" "),
+         tag: "", // SmartBusinessCard가 실제 태그 보여줌
+         temperature: Number(u.manner_temperature ?? 75),
+       });
 
-        // 프로필
-        const u = profileRes?.data ?? {};
-        setProfile(u);
+       const currentUserId = Number(userId);
+       const allUsers = allUsersRes?.data?.results ?? [];
+       const others = Array.isArray(allUsers) ? allUsers.filter(x => x?.id !== currentUserId) : [];
+       setFriends(others.slice(0, 10));
 
-        // 친구 목록
-        const currentUserId = Number(userId);
-        const allUsers = allUsersRes?.data?.results ?? [];
-        const others = Array.isArray(allUsers)
-          ? allUsers.filter((x) => x?.id !== currentUserId)
-          : [];
-        setFriends(others.slice(0, 10));
+       // 스탬프 보드 (원하면 기존 brands API로 유지)
+       const stampAll = (stampsRes?.data?.data ?? []);
+       setStampBoards(stampAll);
+     } catch (e) {
+       console.error("마이페이지 로드 실패:", e);
+     } finally {
+       if (alive) setLoading(false);
+     }
+   };
+   loadData();
 
-        // 스탬프판
-        const boards = stampsRes?.data?.data ?? [];
-        setStampBoards(Array.isArray(boards) ? boards : []);
-      } catch (error) {
-        console.error("데이터 로드 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+   // ✅ 탭을 벗겼다 돌아오면 갱신
+   const onVis = () => { if (document.visibilityState === "visible") loadData(); };
+   document.addEventListener("visibilitychange", onVis);
+   return () => { alive = false; document.removeEventListener("visibilitychange", onVis); };
+ // ✅ location.state?.refresh 가 바뀌면 재요청
+ }, [location.state?.refresh]);
 
   const handleEditCard = () => navigate("/card/edit");
   const handleCoupon = () => navigate("/coupon");

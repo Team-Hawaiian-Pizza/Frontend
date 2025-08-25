@@ -281,7 +281,6 @@ export default function Mainpage() {
           <button type="submit" className="search-btn">🔍</button>
           <span className="region-badge">{regionText}</span>
         </form>
-
         {/* 회색 배경 박스 안에 '그래프 + 추천' 함께 배치 */}
         <div className="graph-container">
         <div className="canvas-wrap" ref={canvasRef}>

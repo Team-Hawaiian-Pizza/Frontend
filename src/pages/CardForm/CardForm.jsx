@@ -1,3 +1,4 @@
+// src/pages/CardForm/CardForm.jsx  (너가 올린 파일 경로에 맞게)
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./cardCreation.css";
 
@@ -5,14 +6,7 @@ const AGE_OPTIONS = ["10대", "20대", "30대", "40대", "50대 이상"];
 
 export const CATEGORY_MAP = {
   디자인: ["로고","브랜딩","포스터","배너","UI 디자인","카드뉴스"],
-  "IT/프로그래밍": [
-    "React","Vue","Angular","Next.js","Node.js","Express",
-    "Java","Spring","Kotlin","Python","Django","Flask",
-    "C","C++","C#",".NET","Go","Rust",
-    "Android","iOS","Flutter","React Native",
-    "DB 설계","SQL","DevOps","Docker","Kubernetes",
-    "AWS","GCP","Azure","보안 점검"
-  ],
+  "IT/프로그래밍": ["React","Vue","Angular","Next.js","Node.js","Express","Java","Spring","Kotlin","Python","Django","Flask","C","C++","C#",".NET","Go","Rust","Android","iOS","Flutter","React Native","DB 설계","SQL","DevOps","Docker","Kubernetes","AWS","GCP","Azure","보안 점검"],
   마케팅: ["SNS 운영","콘텐츠 기획","퍼포먼스 광고","바이럴","카피라이팅","CRM"],
   "사진/영상": ["프로필 촬영","제품 촬영","웨딩","행사 스냅","영상 편집","모션그래픽"],
   "예술/공연": ["밴드","보컬","댄스","연기","연주","작곡/편곡"],
@@ -40,20 +34,19 @@ export const CATEGORY_MAP = {
  * props:
  * - mode: "create" | "edit"
  * - initialData: {
- *     name, phone, email, address, gender, age,
- *     tags: string[], intro, profileUrl?: string
- *     preferredCategory?: string, preferredService?: string
+ *     name, phone, email, address, gender, age, tags: string[], intro, profileUrl?
  *   }
  * - onSubmit: async (formData: FormData) => void
+ * - onPreviewChange?: (previewObj) => void
  */
-  function CardForm({ mode = "create", initialData = {}, onSubmit, onPreviewChange }) {
+function CardForm({ mode = "create", initialData = {}, onSubmit, onPreviewChange }) {
   // === 기본 정보 ===
   const [name, setName] = useState(initialData.name || "");
   const [phone, setPhone] = useState(initialData.phone || "");
   const [email, setEmail] = useState(initialData.email || "");
   const [address, setAddress] = useState(initialData.address || "");
   const [gender, setGender] = useState(initialData.gender || "");
-  const [age, setAge] = useState(initialData.age || "");
+  const [age, setAge] = useState(initialData.age || "");     // ✅ age로 통일
 
   // 선택
   const [intro, setIntro] = useState(initialData.intro || "");
@@ -71,18 +64,19 @@ export const CATEGORY_MAP = {
   const [profilePreview, setProfilePreview] = useState(initialData.profileUrl || "");
   const [photoErr, setPhotoErr] = useState("");
   const fileRef = useRef(null);
- // 프리뷰 페이로드 생성
+
+  // 프리뷰 페이로드
   const buildPreview = () => ({
-    name, phone, email, address, gender, age,
-    tags, intro,
-    profileUrl: profilePreview || initialData.profileUrl || ""
+    name, phone, email, address, gender, age, tags, intro, profileUrl: profilePreview
   });
- // 실시간 프리뷰 업데이트: 관련 상태가 바뀔 때마다 호출
+
+  // 실시간 프리뷰
   useEffect(() => {
     onPreviewChange?.(buildPreview());
-   // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, phone, email, address, gender, age, tags, intro, profilePreview]);
-  // initialData가 바뀌면 동기화 (수정 페이지에서 사용자 교체 등)
+
+  // initialData 동기화
   useEffect(() => {
     setName(initialData.name || "");
     setPhone(initialData.phone || "");
@@ -100,20 +94,20 @@ export const CATEGORY_MAP = {
     setProfilePreview(initialData.profileUrl || "");
     if (fileRef.current) fileRef.current.value = "";
     onPreviewChange?.({
-    name: initialData.name || "",
-    phone: initialData.phone || "",
-    email: initialData.email || "",
-    address: initialData.address || "",
-    gender: initialData.gender || "",
-    age: initialData.age || "",
-    tags: Array.isArray(initialData.tags) ? initialData.tags : [],
-    intro: initialData.intro || "",
-    profileUrl: initialData.profileUrl || ""
-  });
+      name: initialData.name || "",
+      phone: initialData.phone || "",
+      email: initialData.email || "",
+      address: initialData.address || "",
+      gender: initialData.gender || "",
+      age: initialData.age || "",
+      tags: Array.isArray(initialData.tags) ? initialData.tags : [],
+      intro: initialData.intro || "",
+      profileUrl: initialData.profileUrl || ""
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(initialData)]);
 
-  // 이미지 미리보기 URL 메모리 정리 (objectURL만 revoke)
+  // 이미지 미리보기 URL 정리
   useEffect(() => {
     return () => {
       if (profilePreview && profilePreview.startsWith("blob:")) {
@@ -148,16 +142,11 @@ export const CATEGORY_MAP = {
     if (profilePreview && profilePreview.startsWith("blob:")) {
       URL.revokeObjectURL(profilePreview);
     }
-    setProfilePreview(initialData.profileUrl || ""); // 수정모드: 기존 이미지로 롤백
+    setProfilePreview(initialData.profileUrl || "");
     setPhotoErr("");
     if (fileRef.current) fileRef.current.value = "";
   };
-  const onAvatarDrop = (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handlePickFile(e.dataTransfer.files[0]);
-    }
-  };
+  const onAvatarDrop = (e) => { e.preventDefault(); if (e.dataTransfer.files?.[0]) handlePickFile(e.dataTransfer.files[0]); };
   const onAvatarDragOver = (e) => e.preventDefault();
 
   // 유효성
@@ -189,27 +178,18 @@ export const CATEGORY_MAP = {
     formData.append("email", email);
     formData.append("address", address);
     formData.append("gender", gender);
-    formData.append("age", age);
+    formData.append("age", age);                // ✅ ModifyCard에서 toAgeGroup으로 변환
     formData.append("tags", JSON.stringify(tags));
     formData.append("intro", intro ?? "");
-    // 수정 모드에서 새 파일이 없고 기존 url만 있는 케이스를 백엔드가 이해할 수 있게 전달
-    if (profileFile) {
-      formData.append("profile", profileFile);
-    } else if (initialData.profileUrl) {
-      formData.append("profileUrl", initialData.profileUrl);
-    }
+    if (profileFile) formData.append("profile", profileFile);
+    else if (initialData.profileUrl) formData.append("profileUrl", initialData.profileUrl);
 
     await onSubmit?.(formData);
   };
 
   return (
     <main className="cc-main">
-      <form
-        className="cc-card"
-        onSubmit={handleSubmit}
-        noValidate
-        aria-label={mode === "edit" ? "명함 수정" : "명함 생성"}
-      >
+      <form className="cc-card" onSubmit={handleSubmit} noValidate aria-label={mode === "edit" ? "명함 수정" : "명함 생성"}>
         {/* 프로필 + 기본정보 */}
         <section className="cc-section">
           <div className="cc-profile-row">
@@ -221,36 +201,22 @@ export const CATEGORY_MAP = {
                 onDrop={onAvatarDrop}
                 onDragOver={onAvatarDragOver}
                 title="클릭 또는 이미지를 드래그하여 업로드"
-                role="button"
-                tabIndex={0}
+                role="button" tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" ? onAvatarClick() : null)}
                 aria-label="프로필 이미지 업로더"
               >
                 {profilePreview ? (
                   <img src={profilePreview} alt="프로필 미리보기" className="cc-avatar-img" />
                 ) : (
-                  <span className="cc-avatar-hint">
-                    {mode === "edit" ? "사진 변경" : "사진 업로드"}
-                  </span>
+                  <span className="cc-avatar-hint">{mode === "edit" ? "사진 변경" : "사진 업로드"}</span>
                 )}
               </div>
 
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="cc-avatar-input"
-                onChange={onFileChange}
-                aria-label="프로필 사진 업로드"
-              />
+              <input ref={fileRef} type="file" accept="image/*" className="cc-avatar-input" onChange={onFileChange} aria-label="프로필 사진 업로드" />
               <div className="cc-avatar-actions">
-                <button type="button" className="cc-btn-xs" onClick={onAvatarClick}>
-                  {profilePreview ? "사진 변경" : "사진 선택"}
-                </button>
+                <button type="button" className="cc-btn-xs" onClick={onAvatarClick}>{profilePreview ? "사진 변경" : "사진 선택"}</button>
                 {(profilePreview || initialData.profileUrl) && (
-                  <button type="button" className="cc-btn-xs ghost" onClick={clearPhoto}>
-                    삭제
-                  </button>
+                  <button type="button" className="cc-btn-xs ghost" onClick={clearPhoto}>삭제</button>
                 )}
               </div>
               {photoErr && <span className="cc-err mt4" role="alert">{photoErr}</span>}
@@ -260,55 +226,27 @@ export const CATEGORY_MAP = {
             <div className="cc-fields">
               <label className="cc-field">
                 <span className="cc-label">이름 *</span>
-                <input
-                  required
-                  type="text"
-                  placeholder="이름"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  aria-invalid={!name.trim()}
-                />
+                <input required type="text" placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!name.trim()} />
                 {!name.trim() && <span className="cc-err">필수 입력</span>}
               </label>
 
               <label className="cc-field">
                 <span className="cc-label">전화번호 *</span>
-                <input
-                  required
-                  type="tel"
-                  placeholder="010-0000-0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  aria-invalid={Boolean(phone && !phoneOk)}
-                />
+                <input required type="tel" placeholder="010-0000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} aria-invalid={Boolean(phone && !phoneOk)} />
                 {phone && !phoneOk && <span className="cc-err">형식을 확인하세요</span>}
                 {!phone.trim() && <span className="cc-err">필수 입력</span>}
               </label>
 
               <label className="cc-field">
                 <span className="cc-label">이메일 *</span>
-                <input
-                  required
-                  type="email"
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={Boolean(email && !emailOk)}
-                />
+                <input required type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={Boolean(email && !emailOk)} />
                 {email && !emailOk && <span className="cc-err">형식을 확인하세요</span>}
                 {!email.trim() && <span className="cc-err">필수 입력</span>}
               </label>
 
               <label className="cc-field">
                 <span className="cc-label">주소 *</span>
-                <input
-                  required
-                  type="text"
-                  placeholder="시/군/구"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  aria-invalid={!address.trim()}
-                />
+                <input required type="text" placeholder="시/군/구" value={address} onChange={(e) => setAddress(e.target.value)} aria-invalid={!address.trim()} />
                 {!address.trim() && <span className="cc-err">필수 입력</span>}
               </label>
             </div>
@@ -320,25 +258,11 @@ export const CATEGORY_MAP = {
           <h3 className="cc-sec-title">성별 *</h3>
           <div className="cc-radio-row" role="radiogroup" aria-label="성별">
             <label className="cc-radio">
-              <input
-                required
-                type="radio"
-                name="gender"
-                value="여성"
-                checked={gender === "여성"}
-                onChange={(e) => setGender(e.target.value)}
-              />
+              <input required type="radio" name="gender" value="여성" checked={gender === "여성"} onChange={(e) => setGender(e.target.value)} />
               <span>여성</span>
             </label>
             <label className="cc-radio">
-              <input
-                required
-                type="radio"
-                name="gender"
-                value="남성"
-                checked={gender === "남성"}
-                onChange={(e) => setGender(e.target.value)}
-              />
+              <input required type="radio" name="gender" value="남성" checked={gender === "남성"} onChange={(e) => setGender(e.target.value)} />
               <span>남성</span>
             </label>
           </div>
@@ -368,13 +292,7 @@ export const CATEGORY_MAP = {
             {/* 좌: 카테고리 */}
             <div className="cc-cat-col" aria-label="카테고리 목록">
               {categories.map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  className={"cc-cat-btn" + (activeCategory === c ? " is-active" : "")}
-                  onClick={() => onChangeCategory(c)}
-                  aria-pressed={activeCategory === c}
-                >
+                <button type="button" key={c} className={"cc-cat-btn" + (activeCategory === c ? " is-active" : "")} onClick={() => onChangeCategory(c)} aria-pressed={activeCategory === c}>
                   {c}
                 </button>
               ))}
@@ -383,12 +301,7 @@ export const CATEGORY_MAP = {
             {/* 우: 서비스 + 아래 태그 */}
             <div className="cc-service-col">
               <div className="cc-service-row">
-                <select
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  aria-label="세부 서비스"
-                  title="세부 서비스"
-                >
+                <select value={service} onChange={(e) => setService(e.target.value)} aria-label="세부 서비스" title="세부 서비스">
                   {(CATEGORY_MAP[activeCategory] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <button type="button" className="cc-add-btn" onClick={onAddTag} aria-label="태그 추가">추가</button>
@@ -410,14 +323,7 @@ export const CATEGORY_MAP = {
         {/* 소개 */}
         <section className="cc-section">
           <h3 className="cc-sec-title">소개 (선택)</h3>
-          <textarea
-            className="cc-textarea"
-            placeholder="취미, 관심사, 나만의 이야기 등을 자유롭게 적어보세요"
-            rows={5}
-            value={intro}
-            onChange={(e) => setIntro(e.target.value)}
-            aria-label="자기소개"
-          />
+          <textarea className="cc-textarea" placeholder="취미, 관심사, 나만의 이야기 등을 자유롭게 적어보세요" rows={5} value={intro} onChange={(e) => setIntro(e.target.value)} aria-label="자기소개" />
         </section>
 
         {/* 저장 */}
