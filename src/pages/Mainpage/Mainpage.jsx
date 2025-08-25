@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+// [추가] useNavigate 훅을 임포트합니다.
+import { Link, useNavigate } from "react-router-dom";
 import ForceGraph2D from "react-force-graph-2d";
 import api from "../../api/axios";
 import "../../styles/Mainpage.css";
@@ -53,21 +55,50 @@ export default function Mainpage() {
   const fgRef = useRef(null);
   const canvasRef = useRef(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
+  // [추가] navigate 함수를 사용하기 위해 선언합니다.
+  const navigate = useNavigate();
+
+  // [추가] 검색 폼 제출 시 Search 페이지로 이동시키는 핸들러
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // 검색어를 URL 쿼리 파라미터로 담아 /search 페이지로 이동합니다.
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
 
   // 사용자 정보 및 지역 로드
   useEffect(() => {
     const loadUserData = async () => {
+      const localSido = localStorage.getItem("region_sido") || "";
+      const localSigungu = localStorage.getItem("region_sigungu") || "";
+
       try {
         const userId = localStorage.getItem('user_id');
+        if (!userId) {
+          if (localSido && localSigungu) {
+            setRegionText(`사용자의 지역: ${localSido} ${localSigungu}`);
+          }
+          return;
+        }
+
         const response = await api.get(`/users/profiles/${userId}`);
         const userData = response.data;
         setCurrentUser(userData);
-        setRegionText(`사용자의 지역: ${userData.province_name} ${userData.city_name}`);
+
+        if (userData.province_name && userData.city_name) {
+          setRegionText(`사용자의 지역: ${userData.province_name} ${userData.city_name}`);
+        } else if (localSido && localSigungu) {
+          setRegionText(`사용자의 지역: ${localSido} ${localSigungu}`);
+        } else {
+          setRegionText("사용자의 지역: 미설정");
+        }
+
       } catch (error) {
         console.error('사용자 정보 로드 실패:', error);
-        const sido = localStorage.getItem("region_sido") || "";
-        const sigungu = localStorage.getItem("region_sigungu") || "";
-        if (sido && sigungu) setRegionText(`사용자의 지역: ${sido} ${sigungu}`);
+        if (localSido && localSigungu) {
+          setRegionText(`사용자의 지역: ${localSido} ${localSigungu}`);
+        }
       }
     };
     
@@ -89,7 +120,6 @@ export default function Mainpage() {
 
   ro.observe(el);
 
-  // 첫 프레임 보정
   const r = el.getBoundingClientRect();
   setDims({ w: Math.max(1, r.width), h: Math.max(1, r.height) });
 
@@ -105,15 +135,13 @@ export default function Mainpage() {
         const allUsers = response.data.results;
         const currentUserId = parseInt(localStorage.getItem('user_id'));
         
-        // 로그인한 사용자를 중앙에, 다른 사용자들을 주변에 배치
         const me = { 
           id: currentUser.name, 
           name: currentUser.name, 
           fx: 0, 
-          fy: 0 // 중앙 고정
+          fy: 0
         };
         
-        // 다른 사용자들 (최대 10명)
         const others = allUsers
           .filter(user => user.id !== currentUserId)
           .slice(0, 10)
@@ -124,13 +152,11 @@ export default function Mainpage() {
           
         const nodes = [me, ...others];
         
-        // 모든 다른 사용자를 '나'와 연결
         const links = others.map(user => ({ 
           source: currentUser.name, 
           target: user.name 
         }));
 
-        // 사용자들 간 랜덤 연결 추가
         const CONNECTION_PROB = 0.15, MAX_EXTRA_LINKS = 5;
         const seen = new Set(links.map(l => [l.source, l.target].sort().join("|")));
         let extras = 0;
@@ -151,7 +177,6 @@ export default function Mainpage() {
         setGraphData({ nodes, links });
       } catch (error) {
         console.error('네트워크 데이터 로드 실패:', error);
-        // 실패 시 빈 데이터
         setGraphData({ nodes: [], links: [] });
       }
     };
@@ -205,30 +230,34 @@ export default function Mainpage() {
   useEffect(() => {
     const loadRecommendations = async () => {
       try {
-        const response = await api.get('/rewards/brands');
-        const brands = response.data;
+        const [brandsResponse, usersResponse] = await Promise.all([
+          api.get('/rewards/brands'),
+          api.get('/users/all')
+        ]);
         
-        // 브랜드 데이터를 추천 형태로 변환
-        const brandsArray = Array.isArray(brands) ? brands : (brands.data || []);
-        const recommendations = brandsArray.slice(0, 4).map((brand, index) => {
+        const brands = brandsResponse.data?.data || brandsResponse.data || [];
+        const allUsers = usersResponse.data?.results || [];
+        const currentUserId = localStorage.getItem('user_id');
+
+        const otherUsers = allUsers.filter(user => String(user.id) !== currentUserId);
+
+        const recommendations = brands.slice(0, 4).map((brand, index) => {
           const icons = ["☕️", "🧰", "🍜", "🎟️"];
-          const friends = ["김민준", "이서연", "박지후", "최예준"];
+          const recommendingUser = otherUsers[index] || { id: 0, name: "친구" };
           
           return {
-            id: brand.id,
+            brandId: brand.id,
             icon: icons[index] || "🏪",
-            title: `${friends[index] || "친구"}님 추천 ${brand.name}`,
-            desc: brand.benefit
+            title: `${recommendingUser.name}님 추천 ${brand.name}`,
+            desc: brand.benefit,
+            userId: recommendingUser.id
           };
         });
         
         setRecs(recommendations);
       } catch (error) {
         console.error('추천 데이터 로드 실패:', error);
-        // 실패 시 기본 추천
-        setRecs([
-          { id: 1, icon: "☕️", title: "친구 추천 커피숍", desc: "맛있는 커피를 즐겨보세요!" }
-        ]);
+        setRecs([]);
       }
     };
     
@@ -240,18 +269,18 @@ export default function Mainpage() {
       
       {/* ===== 상단: 검색 + 그래프 + 추천 ===== */}
       <div className="main-container">
-        {/* 검색창 + 지역 배지 */}
-        <div className="search-bar">
+        {/* [수정] div를 form으로 변경하고 onSubmit 핸들러를 추가합니다. */}
+        <form className="search-bar" onSubmit={handleSearchSubmit}>
           <input
             type="text"
             placeholder="사용자의 친구를 검색하세요!"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="search-btn">🔍</button>
+          {/* [수정] button에 type="submit"을 추가합니다. */}
+          <button type="submit" className="search-btn">🔍</button>
           <span className="region-badge">{regionText}</span>
-        </div>
-          
+        </form>
         {/* 회색 배경 박스 안에 '그래프 + 추천' 함께 배치 */}
         <div className="graph-container">
         <div className="canvas-wrap" ref={canvasRef}>
@@ -276,20 +305,21 @@ export default function Mainpage() {
           <aside className="rec-panel">
             <div className="rec-title">맞춤 추천</div>
             {recs.map((r) => (
-              <div className="rec-card" key={r.id}>
-                <div className="rec-icon">{r.icon}</div>
-                <div className="rec-text">
-                  <h4>{r.title}</h4>
-                  <p>{r.desc}</p>
+              <Link to={`/profile/${r.userId}`} key={r.brandId} className="rec-card-link">
+                <div className="rec-card">
+                  <div className="rec-icon">{r.icon}</div>
+                  <div className="rec-text">
+                    <h4>{r.title}</h4>
+                    <p>{r.desc}</p>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </aside>
         </div>
       </div>
 
-      {/* ====== 아래부터 랜딩 섹션(스크롤 등장) ====== */}
-      <div className="landing">
+     <div className="landing">
         {/* 소개 섹션 */}
         <Reveal className="l-sec l-intro" variant="up">
           <h2 className="l-title">건너건너</h2>

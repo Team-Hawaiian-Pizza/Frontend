@@ -13,6 +13,7 @@ function CardCreation() {
   const handleSubmit = async (formData) => {
     try {
       await api.post("/users/signup/card", formData);
+            console.log(formData)
       alert("명함이 생성되었습니다!");
       navigate("/");
     } catch (error) {

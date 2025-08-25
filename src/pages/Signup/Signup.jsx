@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"; // useEffect 임포트
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link} from "react-router-dom";
 import api from "../../api/axios";
 import "../../styles/Signup.css";
 
@@ -11,18 +11,6 @@ export default function SignUpPage() {
   const [showPw2, setShowPw2] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  // [추가] 회원가입 성공 후 네비게이션을 트리거하기 위한 상태
-  const [signupSuccess, setSignupSuccess] = useState(false);
-
-  // [추가] signupSuccess 상태가 true로 바뀌면, /location 페이지로 이동합니다.
-  useEffect(() => {
-    if (signupSuccess) {
-      console.log("useEffect: signupSuccess가 true이므로 /location으로 이동합니다.");
-      navigate('/location');
-    }
-  }, [signupSuccess, navigate]);
 
   const validate = () => {
     if (!id || !pw || !pw2) return "모든 항목을 입력해 주세요.";
@@ -52,11 +40,12 @@ export default function SignUpPage() {
         throw new Error("서버로부터 사용자 ID를 받지 못했습니다.");
       }
       
+      // LocationPage로 넘어가기 전, user_id와 username을 임시 저장합니다.
       localStorage.setItem("signup_user_id", String(userId));
       localStorage.setItem("signup_username", id);
 
-      // [수정] 직접 navigate를 호출하는 대신, 성공 상태를 true로 변경합니다.
-      setSignupSuccess(true);
+      // 페이지를 새로고침하며 이동하여 React Router의 상태 문제를 확실히 해결합니다.
+      window.location.href = '/location';
 
     } catch (error) {
       console.error("회원가입 실패:", error.response || error);
@@ -145,5 +134,5 @@ export default function SignUpPage() {
       </form>
     </section>
   );
-}
 
+}
