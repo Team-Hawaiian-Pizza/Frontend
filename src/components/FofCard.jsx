@@ -10,7 +10,7 @@ const FofCard = ({ name, img, phone, email, address, approved, onDetailClick }) 
     >
       <div className="card-content">
         <div className="card-avatar">
-          <img src={img} alt={name} />
+          <img src={img || '/logo.png'} alt={name} />
         </div>
         <div className="card-info">
           <div className="card-name">{name}</div>
