@@ -4,7 +4,7 @@ import "../pages/Search/FriendCard.css";
 const FriendCard = ({ name,img }) => {
   return (
     <div className="friend-card card">
-        <img className="card-avatar" src={img || '/logo.png'} alt={name}/>
+        <img className="card-avatar" src={img || '/default_image.png'} alt={name}/>
         <div className="card-name">{name}</div>
     </div>
   );
