@@ -154,7 +154,16 @@ const Search = () => {
     );
   };
 
-  if (loading) return <div style={{ padding: 20 }}>로딩 중...</div>;
+  if (loading) return (
+    <div className="searchpage">
+      <div className="loading-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <div className="loading-text">인맥을 찾고 있어요...</div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="searchpage">
