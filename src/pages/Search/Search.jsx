@@ -161,7 +161,7 @@ const Search = () => {
       <form className="search-bar" onSubmit={onSubmit}>
         <input
           className="search-input"
-          placeholder="필요한 명함을 검색하세요"
+          placeholder="AI가 분석해서 맞는 인맥을 찾아드려요! 어떤 도움이 필요하신가요?"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
