@@ -1,6 +1,4 @@
-/* ============================= */
-/* 페이지 래퍼 */
-/* ============================= */
+/* 페이지 */
 .detail-page {
   max-width: 1120px;
   margin: 32px auto 96px;
@@ -8,9 +6,7 @@
   background: #F9FAFB; /* 페이지 전체 배경 */
 }
 
-/* ============================= */
 /* 메인 컨테이너: 라이트 패널 느낌 */
-/* ============================= */
 .detail-container {
   display: flex;
   gap: 32px;
@@ -22,9 +18,7 @@
               0 1px 0 rgba(17,24,39,0.04);
 }
 
-/* ============================= */
 /* 왼쪽 섹션 (명함 카드 + 버튼) */
-/* ============================= */
 .detail-left {
   flex: 1;
   min-width: 300px;
@@ -77,6 +71,13 @@
   font-size: 14px;
   color: #374151;
 }
+/* 안내 문구 스타일(연결 전) */
+.detail-guide {
+  display: inline-block;
+  font-size: 13px;
+  color: #6B7280; /* 중간 회색 */
+  margin-bottom: 4px;
+}
 
 /* 승인 전: 전체를 하나의 배지처럼 */
 .detail-info.blurred {
@@ -84,11 +85,6 @@
   border: 1px solid #E5E7EB;
   border-radius: 12px;
   padding: 12px 14px;
-}
-.detail-info.blurred span {
-  filter: blur(4px);
-  user-select: none;
-  pointer-events: none;
 }
 
 /* 왼쪽 버튼 영역 */
@@ -120,9 +116,7 @@
   transform: scale(0.98);
 }
 
-/* ============================= */
 /* 오른쪽 섹션 (추가 설명/후기/매너온도) */
-/* ============================= */
 .detail-right {
   flex: 2;
   display: flex;
@@ -168,9 +162,7 @@
   padding: 6px 10px;
 }
 
-/* ============================= */
 /* 매너 온도 */
-/* ============================= */
 .detail-manner {
   display: flex;
   align-items: center;
@@ -200,9 +192,7 @@
   text-align: right;
 }
 
-/* ============================= */
 /* 반응형 */
-/* ============================= */
 @media (max-width: 920px){
   .detail-container { flex-direction: column; }
 }

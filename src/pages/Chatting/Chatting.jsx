@@ -345,35 +345,7 @@ const ChattingPage = () => {
         <div className="chat-list-section">
           <div className="chat-header" style={{ display: 'flex', alignItems: 'center' }}>
             전체 대화
-            <button 
-              className="create-room-btn" 
-              onClick={() => setShowCreateRoom(true)}
-              style={{ marginLeft: 'auto', padding: '5px 10px', fontSize: '12px' }}
-            >
-              + 새 채팅
-            </button>
           </div>
-          
-          {showCreateRoom && (
-            <div className="create-room-form" style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-              <input
-                type="text"
-                placeholder="사용자명을 입력하세요"
-                value={newRoomTarget}
-                onChange={(e) => setNewRoomTarget(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && createChatRoom()}
-                style={{ width: '100%', padding: '8px', marginBottom: '5px' }}
-              />
-              <div>
-                <button onClick={createChatRoom} style={{ marginRight: '5px', padding: '5px 10px' }}>
-                  생성
-                </button>
-                <button onClick={() => { setShowCreateRoom(false); setNewRoomTarget(''); }} style={{ padding: '5px 10px' }}>
-                  취소
-                </button>
-              </div>
-            </div>
-          )}
           
           <div className="chat-list">
             {loading ? (

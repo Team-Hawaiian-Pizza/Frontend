@@ -1,4 +1,5 @@
 import api from './api/axios.js';
+import chatApi from './api/chatApi';
 // localStorage에서 user_id 가져오기 헬퍼
 const getMyUserId = () => {
   return localStorage.getItem('user_id') || localStorage.getItem('userId');
@@ -47,5 +48,27 @@ export const acceptRequest = (requestID) => {
 export const rejectRequest = (requestID) => {
   return api.post(`/connections/reject/${requestID}`, {
     user_id: getMyUserId(),
+  });
+};
+
+// ===== 채팅 부부느 ====
+
+// localStorage에서 username 가져오기 헬퍼
+export const getMyUsername = () => {
+  return localStorage.getItem('username'); 
+};
+
+// 내 모든 대화 목록 가져오기
+export const getMyConversations = () => {
+  const myUserId = getMyUsername();
+  return chatApi.get(`/users/${myUserId}/conversations/`);
+};
+
+// 새로운 대화 생성하기
+export const createConversation = (otherUserId) => {
+  const myUserId = getMyUsername();
+  return chatApi.post('/conversations/', {
+    participant1_id: myUserId,
+    participant2_id: otherUserId
   });
 };
