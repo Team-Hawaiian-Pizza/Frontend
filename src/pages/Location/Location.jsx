@@ -10,10 +10,13 @@ export default function LocationPage() {
   // --- 상태(State) 선언부 ---
   const [userId, setUserId] = useState(null);
   const [username, setUsername] = useState(null);
+
+
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(false); 
   const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
+
   const [isValidating, setIsValidating] = useState(true);
 
   // --- 데이터 및 로직 ---
@@ -35,6 +38,10 @@ export default function LocationPage() {
       navigate("/signup");
     }
   }, [navigate]);
+
+  const provinceOptions = useMemo(() => Object.keys(regions), []);
+  const cityOptions = useMemo(() => (province ? regions[province] || [] : []), [province]);
+  const canSubmit = !!(province && city && userId) && !loading;
 
   // 폼 제출 핸들러
   const onSubmit = async (e) => {
