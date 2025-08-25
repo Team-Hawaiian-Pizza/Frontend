@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // AI 서버 전용 Axios 인스턴스
 const aiApi = axios.create({
-  baseURL: 'http://3.37.82.219/', // 반드시 /api/ 포함 (백엔드 라우트와 일치)
+  baseURL: '/api/ai', // AI 백엔드 프록시 경로
   headers: {
     'Content-Type': 'application/json',
   },
