@@ -63,7 +63,7 @@ const DetailPage = () => {
 
   // 서버 응답에서 필드 매핑
   const name =  profile.name || '이름 비공개';
-  const avatar = profile.avatar_url || '/friend-1.jpg';
+  const avatar = profile.avatar_url || '/default_image.png';
   const address = [profile.province_name, profile.city_name].filter(Boolean).join(' ');
   const connection = profile.connection_status; // 'CONNECTED' | 'NONE' | 'PENDING'
 
