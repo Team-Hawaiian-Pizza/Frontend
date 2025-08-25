@@ -110,11 +110,6 @@ const Search = () => {
       <div className="search-results-container">
         <div className="results-header">
           <h2>추천 결과</h2>
-          <div className="results-meta">
-            <span>응답 시간: {response_time?.toFixed(2)}초</span>
-            <span> | 분류 카테고리: {inferred_category}</span>
-            <span> | 요청 ID: {request_id}</span>
-          </div>
         </div>
         
         <h3>📍 추천 인맥 ({recs?.length || 0}명)</h3>
@@ -127,7 +122,7 @@ const Search = () => {
               const score = Math.round((rec.ai_score || 0) * 100);
               
               return (
-                <div key={index} className="recommendation-item">
+                <div key={index} className="recommendation-item" onClick={() => goToDetail(user.id || rec.recommended_user_id)} style={{cursor: 'pointer'}}>
                   <div className="rec-header">
                     <div className="rec-name">{user.name || '이름없음'}</div>
                     <div className="rec-score">{score}점</div>
@@ -183,11 +178,11 @@ const Search = () => {
           {friendFofPairs.map((pair) => (
             <React.Fragment key={pair.fof.id}>
               <div className="friend-list-item">
-                <FriendCard name={pair.friend.name} img={pair.friend.avatar_url || '/friend-1.jpg'} />
+                <FriendCard name={pair.friend.name} img={pair.friend.avatar_url} />
               </div>
               <div className="fof-list-item">
                 <FofCard
-                  img={pair.fof.avatar_url || '/friend-1.jpg'}
+                  img={pair.fof.avatar_url}
                   name={pair.fof.name || '이름없음'}
                   phone={pair.fof.masked_phone || '010-****-****'}
                   email={pair.fof.masked_email || '****@****'}
